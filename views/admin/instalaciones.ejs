@@ -1,0 +1,66 @@
+<%- include('../layouts/header') %>
+
+<div class="row my-4">
+  <div class="col-12">
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0">Gestión de Instalaciones y Calendario</h4>
+        <!-- SELECTOR DE DIAS DE LA SEMANA -->
+        <div class="btn-group btn-group-sm" role="group">
+          <% ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(dia => { %>
+            <a href="/admin/instalaciones?dia=<%= dia %>" class="btn <%= diaSeleccionado === dia ? 'btn-dark' : 'btn-outline-secondary' %>">
+              <%= dia %>
+            </a>
+          <% }) %>
+        </div>
+      </div>
+
+      <% if (mensaje) { %>
+        <div class="alert alert-info py-2 small mb-3">
+          <%= mensaje %>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table class="table table-bordered text-center align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 15%;">Horario</th>
+              <th>Cancha de Golf</th>
+              <th>Cancha de Tenis</th>
+              <th>Piscina</th>
+              <th>Salón de Eventos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% const franjas = ['8:00am - 9:00am', '9:00am - 10:00am', '10:00am - 11:00am', '11:00am - 12:00pm', '12:00pm - 1:00pm', '1:00pm - 2:00pm', '2:00pm - 3:00pm', '3:00pm - 4:00pm', '4:00pm - 5:00pm', '5:00pm - 6:00pm', '7:00pm - 8:00pm']; %>
+            <% franjas.forEach((franja, idx) => { %>
+              <tr>
+                <td class="fw-bold bg-light"><%= franja %></td>
+                <td><span class="badge bg-<%= idx % 2 === 0 ? 'success' : 'secondary' %>"><%= idx % 2 === 0 ? '50%' : '0%' %></span></td>
+                <td><span class="badge bg-<%= idx < 7 ? 'danger' : 'secondary' %>"><%= idx < 7 ? '100%' : '0%' %></span></td>
+                <td><span class="badge bg-<%= idx % 3 === 0 ? 'warning text-dark' : 'success' %>"><%= idx % 3 === 0 ? '80%' : '20%' %></span></td>
+                <td><span class="badge bg-<%= idx > 3 ? 'danger' : 'secondary' %>"><%= idx > 3 ? '100%' : '0%' %></span></td>
+              </tr>
+            <% }) %>
+            <tr class="table-secondary fw-bold">
+              <td>Mantenimiento</td>
+              <% instalaciones.forEach(inst => { %>
+                <td>
+                  <form action="/admin/instalaciones/bloquear" method="POST">
+                    <input type="hidden" name="id" value="<%= inst.id %>">
+                    <button type="submit" class="btn btn-sm <%= inst.bloqueada_mantenimiento ? 'btn-danger' : 'btn-outline-dark' %> py-1 px-2" style="font-size: 0.75rem;">
+                      <%= inst.bloqueada_mantenimiento ? 'Desbloquear' : 'Bloquear Mantenimiento' %>
+                    </button>
+                  </form>
+                </td>
+              <% }) %>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

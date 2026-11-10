@@ -1,0 +1,30 @@
+<%- include('../layouts/header') %>
+
+<div class="row align-items-center justify-content-center my-4">
+  <div class="col-lg-10">
+    <div class="custom-card p-5">
+      <div class="row align-items-center">
+        <div class="col-md-6 mb-4 mb-md-0">
+          <h1 class="display-6 fw-bold mb-3">
+            Bienvenido<br>
+            <span class="text-success">Administrador</span>
+          </h1>
+          <p class="text-muted mb-4 fs-5">
+            Has iniciado sesión con el rol de <strong><%= usuario.rol.replace('_', ' ').toUpperCase() %></strong> en la plataforma del Club Valle Alto.
+          </p>
+          <div class="d-flex gap-3 flex-wrap">
+            <a href="/admin/socios" class="btn-dark-pill px-4 py-2">Gestión de Socios</a>
+            <a href="/admin/instalaciones" class="btn-header-action px-4 py-2">Calendario Instalaciones</a>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="hero-img-box">
+            <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80" alt="Club Valle Alto Admin">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

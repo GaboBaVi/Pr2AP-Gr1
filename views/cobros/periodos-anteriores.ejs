@@ -1,0 +1,83 @@
+<%- include('../layouts/header') %>
+
+<div class="row my-4">
+  <div class="col-12">
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0">Historial de Periodos Anteriores</h4>
+        <div class="d-flex gap-2">
+          <input type="text" class="form-control form-control-custom form-control-sm" placeholder="Buscar mes o periodo..." id="busquedaHistorial">
+          <a href="/socio/estado-cuenta" class="btn btn-sm btn-outline-secondary rounded-pill">Volver</a>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Periodo / Mes</th>
+              <th>Fecha de Pago</th>
+              <th>Cuota Membresía</th>
+              <th>Servicios Adicionales</th>
+              <th>Total Pagado</th>
+              <th>Estado</th>
+              <th class="text-end">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (historial && historial.length > 0) { %>
+              <% historial.forEach(h => { %>
+                <tr>
+                  <td class="fw-bold"><%= h.periodo %></td>
+                  <td><%= h.fecha_pago ? new Date(h.fecha_pago).toLocaleDateString() : 'Pendiente' %></td>
+                  <td>CRC <%= Number(h.cuota_membresia).toLocaleString() %></td>
+                  <td>CRC <%= Number(h.cargos_servicios).toLocaleString() %></td>
+                  <td class="fw-bold">CRC <%= Number(h.total_pagar).toLocaleString() %></td>
+                  <td>
+                    <span class="badge bg-<%= h.estado === 'pagado' ? 'success' : (h.estado === 'pendiente' ? 'warning text-dark' : 'danger') %>">
+                      <%= h.estado.toUpperCase() %>
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <a href="/socio/descargar-pdf/<%= h.id %>" class="btn-dark-pill btn-sm-pill">Descargar PDF</a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <!-- Fila estatica de muestra coincidente con el prototipo -->
+              <tr>
+                <td class="fw-bold">Septiembre 2026</td>
+                <td>28/09/2026</td>
+                <td>CRC 35,000</td>
+                <td>CRC 5,000</td>
+                <td class="fw-bold">CRC 40,000</td>
+                <td><span class="badge bg-success">PAGADO</span></td>
+                <td class="text-end"><a href="/socio/descargar-pdf/1" class="btn-dark-pill btn-sm-pill">Descargar PDF</a></td>
+              </tr>
+              <tr>
+                <td class="fw-bold">Agosto 2026</td>
+                <td>29/08/2026</td>
+                <td>CRC 35,000</td>
+                <td>CRC 15,000</td>
+                <td class="fw-bold">CRC 50,000</td>
+                <td><span class="badge bg-success">PAGADO</span></td>
+                <td class="text-end"><a href="/socio/descargar-pdf/1" class="btn-dark-pill btn-sm-pill">Descargar PDF</a></td>
+              </tr>
+              <tr>
+                <td class="fw-bold">Julio 2026</td>
+                <td>30/07/2026</td>
+                <td>CRC 35,000</td>
+                <td>CRC 0</td>
+                <td class="fw-bold">CRC 35,000</td>
+                <td><span class="badge bg-success">PAGADO</span></td>
+                <td class="text-end"><a href="/socio/descargar-pdf/1" class="btn-dark-pill btn-sm-pill">Descargar PDF</a></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

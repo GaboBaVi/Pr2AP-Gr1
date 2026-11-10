@@ -1,0 +1,79 @@
+<%- include('../layouts/header') %>
+
+<div class="row my-4">
+  <div class="col-12">
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0">Gestión de Socios y Cuentas</h4>
+        <input type="text" class="form-control form-control-custom form-control-sm" style="max-width: 300px;" placeholder="Búsqueda de usuarios..." id="busquedaSocios">
+      </div>
+
+      <% if (mensaje) { %>
+        <div class="alert alert-info py-2 small mb-3">
+          <%= mensaje %>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th>Cédula</th>
+              <th>Nombre</th>
+              <th>Tipo Membresía</th>
+              <th>Estado Cuenta</th>
+              <th>Rol Actual</th>
+              <th>Gestión de Cuenta</th>
+              <th>Modificar Rol</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (socios && socios.length > 0) { %>
+              <% socios.forEach(s => { %>
+                <tr>
+                  <td class="fw-bold"><%= s.cedula %></td>
+                  <td><%= s.nombre_completo %></td>
+                  <td><span class="badge bg-secondary text-capitalize"><%= s.tipo_membresia || 'Individual' %></span></td>
+                  <td>
+                    <span class="badge bg-<%= s.estado === 'activo' ? 'success' : (s.estado === 'suspendido' ? 'danger' : 'warning text-dark') %>">
+                      <%= s.estado.toUpperCase() %>
+                    </span>
+                  </td>
+                  <td><span class="badge bg-dark"><%= s.rol %></span></td>
+                  <td>
+                    <form action="/admin/socios/estado" method="POST" class="d-inline">
+                      <input type="hidden" name="id" value="<%= s.id %>">
+                      <% if (s.estado === 'activo') { %>
+                        <input type="hidden" name="estado" value="suspendido">
+                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">Suspender</button>
+                      <% } else { %>
+                        <input type="hidden" name="estado" value="activo">
+                        <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2">Activar</button>
+                      <% } %>
+                    </form>
+                  </td>
+                  <td>
+                    <form action="/admin/socios/rol" method="POST" class="d-flex gap-1 align-items-center">
+                      <input type="hidden" name="id" value="<%= s.id %>">
+                      <select name="rol" class="form-select form-select-sm py-0" style="font-size: 0.75rem;">
+                        <option value="socio" <%= s.rol === 'socio' ? 'selected' : '' %>>Socio</option>
+                        <option value="admin_general" <%= s.rol === 'admin_general' ? 'selected' : '' %>>Admin General</option>
+                        <option value="encargado_instalaciones" <%= s.rol === 'encargado_instalaciones' ? 'selected' : '' %>>Encargado Instalaciones</option>
+                        <option value="encargado_cobros" <%= s.rol === 'encargado_cobros' ? 'selected' : '' %>>Encargado Cobros</option>
+                      </select>
+                      <button type="submit" class="btn-dark-pill btn-sm-pill py-0 px-2" style="font-size: 0.75rem;">Guardar</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="7" class="text-center text-muted py-4">No hay socios registrados aún.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

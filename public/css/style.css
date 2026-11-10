@@ -1,0 +1,130 @@
+:root {
+  --bg-main: #e8e4dc;
+  --card-bg: #f5f3ee;
+  --text-dark: #222222;
+  --text-muted: #666666;
+  --primary-green: #3ea647;
+  --primary-green-hover: #348f3c;
+  --dark-btn: #1f1f1f;
+  --dark-btn-hover: #000000;
+  --border-color: #dcd6cb;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+/* NAVBAR */
+.navbar-custom {
+  background-color: transparent;
+  padding: 1.2rem 2.5rem;
+}
+
+.brand-logo {
+  height: 48px;
+  object-fit: contain;
+}
+
+.nav-link-custom {
+  color: #333 !important;
+  font-weight: 500;
+  margin: 0 1rem;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+.nav-link-custom:hover, .nav-link-custom.active {
+  color: var(--primary-green) !important;
+}
+
+.btn-header-action {
+  background-color: var(--primary-green);
+  color: white !important;
+  border-radius: 20px;
+  padding: 0.45rem 1.4rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  text-decoration: none;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.btn-header-action:hover {
+  background-color: var(--primary-green-hover);
+}
+
+/* CARDS */
+.custom-card {
+  background-color: var(--card-bg);
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  padding: 2rem;
+}
+
+/* BUTTONS */
+.btn-dark-pill {
+  background-color: var(--dark-btn);
+  color: #ffffff !important;
+  border-radius: 25px;
+  padding: 0.6rem 1.8rem;
+  font-weight: 600;
+  border: none;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-dark-pill:hover {
+  background-color: var(--dark-btn-hover);
+  transform: translateY(-1px);
+}
+
+.btn-sm-pill {
+  padding: 0.35rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* FORMS */
+.form-control-custom {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+}
+
+.form-control-custom:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 0.2rem rgba(62, 166, 71, 0.15);
+}
+
+/* HERO POOL IMAGE ON DASHBOARD */
+.hero-img-box {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  height: 240px;
+}
+
+.hero-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* FOOTER */
+footer {
+  margin-top: auto;
+  padding: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

@@ -1,0 +1,94 @@
+<%- include('../layouts/header') %>
+
+<div class="row my-4">
+  <div class="col-12">
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h4 class="fw-bold mb-1">Control de Cobros y Morosidad</h4>
+          <span class="text-muted small">Módulo para el Encargado de Cobros y Administrador General</span>
+        </div>
+        <div class="d-flex gap-2">
+          <input type="text" class="form-control form-control-custom form-control-sm" placeholder="Búsqueda de usuario..." id="busquedaCobros">
+          <form action="/admin/cobros/recordatorios" method="POST">
+            <button type="submit" class="btn-dark-pill btn-sm-pill">Enviar recordatorios de pago</button>
+          </form>
+        </div>
+      </div>
+
+      <% if (mensaje) { %>
+        <div class="alert alert-info py-2 small mb-3">
+          <%= mensaje %>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th>Días de Retraso</th>
+              <th>Nombre</th>
+              <th>Morosidad</th>
+              <th>Estado de Cuenta</th>
+              <th>Acción de Pago</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (morosos && morosos.length > 0) { %>
+              <% morosos.forEach(m => { %>
+                <tr>
+                  <td><span class="badge bg-danger"><%= m.dias_atraso %> días</span></td>
+                  <td class="fw-bold"><%= m.nombre_completo %></td>
+                  <td class="text-danger fw-bold">CRC <%= Number(m.total_pagar).toLocaleString() %></td>
+                  <td>
+                    <span class="badge bg-<%= m.estado === 'vencido' ? 'danger' : 'warning text-dark' %>">
+                      <%= m.estado.toUpperCase() %>
+                    </span>
+                  </td>
+                  <td>
+                    <form action="/admin/cobros/pagar" method="POST">
+                      <input type="hidden" name="id" value="<%= m.id %>">
+                      <button type="submit" class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <!-- Registros de muestra coincidentes con el prototipo -->
+              <tr>
+                <td><span class="badge bg-danger">32 días</span></td>
+                <td class="fw-bold">Daniel Zumbado Hidalgo</td>
+                <td class="text-danger fw-bold">CRC 200,000</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-danger">15 días</span></td>
+                <td class="fw-bold">Carlos Mora Vargas</td>
+                <td class="text-danger fw-bold">CRC 45,000</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-danger">30 días</span></td>
+                <td class="fw-bold">Valeria Castro Jiménez</td>
+                <td class="text-danger fw-bold">CRC 85,000</td>
+                <td><span class="badge bg-success">Activa</span></td>
+                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
+              </tr>
+              <tr>
+                <td><span class="badge bg-danger">90 días</span></td>
+                <td class="fw-bold">Roberto Esquivel Mata</td>
+                <td class="text-danger fw-bold">CRC 250,000</td>
+                <td><span class="badge bg-danger">Suspendida</span></td>
+                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

@@ -1,0 +1,96 @@
+<%- include('../layouts/header') %>
+
+<div class="row g-4 my-3">
+  <% if (mensaje) { %>
+    <div class="col-12">
+      <div class="alert alert-success py-2 small" role="alert">
+        <%= mensaje %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- COLUMNA PRINCIPAL: HISTORIAL DE RESERVAS CON PESTAÑAS -->
+  <div class="col-lg-8">
+    <div class="custom-card">
+      <!-- PESTAÑAS -->
+      <ul class="nav nav-pills mb-4 nav-fill">
+        <li class="nav-item">
+          <a class="nav-link <%= estadoActual === 'activa' ? 'active bg-dark' : 'text-dark' %>" href="/socio/reservas?estado=activa">Activas</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= estadoActual === 'finalizada' ? 'active bg-dark' : 'text-dark' %>" href="/socio/reservas?estado=finalizada">Finalizadas</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link <%= estadoActual === 'cancelada' ? 'active bg-dark' : 'text-dark' %>" href="/socio/reservas?estado=cancelada">Canceladas</a>
+        </li>
+      </ul>
+
+      <h5 class="fw-bold mb-3">Mis Reservas <%= estadoActual.charAt(0).toUpperCase() + estadoActual.slice(1) %>s</h5>
+
+      <% if (reservas.length === 0) { %>
+        <div class="text-center py-5 text-muted">
+          <p>No tienes reservas <%= estadoActual %>s registradas en este momento.</p>
+        </div>
+      <% } else { %>
+        <div class="d-flex flex-column gap-3">
+          <% reservas.forEach(r => { %>
+            <div class="border rounded-3 p-3 bg-white d-flex justify-content-between align-items-center">
+              <div>
+                <h6 class="fw-bold mb-1"><%= r.nombre_instalacion %></h6>
+                <p class="small text-muted mb-1">
+                  <strong>Fecha:</strong> <%= new Date(r.fecha).toLocaleDateString() %> | 
+                  <strong>Horario:</strong> <%= r.hora_inicio %> - <%= r.hora_fin %>
+                </p>
+                <p class="small text-muted mb-0">
+                  <strong>Personas:</strong> <%= r.num_personas %> | 
+                  <strong>Servicios Adicionales:</strong> CRC <%= Number(r.costo_servicios || 0).toLocaleString() %>
+                </p>
+              </div>
+              <% if (estadoActual === 'activa') { %>
+                <form action="/socio/reservas/cancelar" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta reserva?');">
+                  <input type="hidden" name="id" value="<%= r.id %>">
+                  <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Cancelar</button>
+                </form>
+              <% } %>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- COLUMNA LATERAL: INVITADOS Y NUEVA RESERVA -->
+  <div class="col-lg-4">
+    <!-- INVITADOS DEL MES -->
+    <div class="custom-card mb-3 text-center">
+      <h6 class="fw-bold mb-2">Invitados del Mes</h6>
+      <div class="d-flex justify-content-around my-2 text-muted small">
+        <div>
+          <span>Permitidos</span><br>
+          <strong class="fs-5 text-dark"><%= limiteInvitados %></strong>
+        </div>
+        <div>
+          <span>Registrados</span><br>
+          <strong class="fs-5 text-dark"><%= totalInvitadosMes %></strong>
+        </div>
+      </div>
+      <div class="progress mt-2" style="height: 8px;">
+        <div class="progress-bar bg-success" style="width: <%= (totalInvitadosMes / limiteInvitados) * 100 %>%"></div>
+      </div>
+    </div>
+
+    <!-- BOTON AGREGAR INVITADO -->
+    <div class="custom-card mb-3 text-center">
+      <p class="small text-muted mb-2">¿Quieres agregar nuevos invitados?</p>
+      <a href="/socio/reservar" class="btn-dark-pill btn-sm-pill w-100">Nuevo Invitado</a>
+    </div>
+
+    <!-- BOTON NUEVA RESERVA -->
+    <div class="custom-card text-center">
+      <p class="small text-muted mb-2">¿Quieres realizar una nueva reserva?</p>
+      <a href="/socio/reservar" class="btn-dark-pill btn-sm-pill w-100">Realizar Reserva</a>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

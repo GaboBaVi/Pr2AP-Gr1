@@ -1,0 +1,30 @@
+<%- include('../layouts/header') %>
+
+<div class="row align-items-center justify-content-center my-4">
+  <div class="col-lg-10">
+    <div class="custom-card p-5">
+      <div class="row align-items-center">
+        <div class="col-md-6 mb-4 mb-md-0">
+          <h1 class="display-6 fw-bold mb-3">
+            Bienvenido(a),<br>
+            <span class="text-success"><%= usuario.nombre %></span>
+          </h1>
+          <p class="text-muted mb-4 fs-5">
+            ¿Qué necesitas hacer en Club Valle Alto hoy?
+          </p>
+          <div class="d-flex gap-3">
+            <a href="/socio/reservas" class="btn-dark-pill px-4 py-2">Mis Reservas</a>
+            <a href="/socio/reservar" class="btn-header-action px-4 py-2">Nueva Reserva</a>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="hero-img-box">
+            <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=800&q=80" alt="Piscina Club Valle Alto">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

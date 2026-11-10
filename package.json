@@ -1,0 +1,23 @@
+{
+  "name": "club-valle-alto",
+  "version": "1.0.0",
+  "description": "Sistema de Gestion Web para Club Valle Alto - IC-4810 Administracion de Proyectos",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "nodemailer": "^6.9.16",
+    "pdfkit": "^0.15.1",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

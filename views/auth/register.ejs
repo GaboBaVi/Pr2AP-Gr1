@@ -1,0 +1,51 @@
+<%- include('../layouts/header') %>
+
+<div class="row justify-content-center my-4">
+  <div class="col-md-6 col-lg-5">
+    <div class="custom-card p-4 p-md-5">
+      <h2 class="text-center fw-bold mb-4">Registro</h2>
+
+      <% if (error) { %>
+        <div class="alert alert-danger py-2 small" role="alert">
+          <%= error %>
+        </div>
+      <% } %>
+
+      <form action="/auth/register" method="POST">
+        <div class="mb-3">
+          <input type="text" name="nombre_completo" class="form-control form-control-custom" placeholder="Nombre Completo" required>
+        </div>
+        <div class="mb-3">
+          <input type="text" name="cedula" class="form-control form-control-custom" placeholder="Cédula" required>
+        </div>
+        <div class="mb-3">
+          <input type="email" name="correo" class="form-control form-control-custom" placeholder="Correo Electrónico" required>
+        </div>
+        <div class="mb-3">
+          <input type="tel" name="telefono" class="form-control form-control-custom" placeholder="Número de Teléfono" required>
+        </div>
+        <div class="mb-3">
+          <input type="text" name="direccion" class="form-control form-control-custom" placeholder="Dirección" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small text-muted ms-1 mb-1">Fecha de Nacimiento</label>
+          <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" required>
+        </div>
+        <div class="mb-4">
+          <input type="password" name="password" class="form-control form-control-custom" placeholder="Contraseña" required minlength="6">
+        </div>
+
+        <div class="text-center mb-3">
+          <button type="submit" class="btn-dark-pill w-100 py-2">Crear Cuenta</button>
+        </div>
+
+        <div class="text-center small mt-3">
+          <span class="text-muted">¿Ya tienes cuenta?</span> 
+          <a href="/auth/login" class="fw-bold text-dark text-decoration-none">Inicia Sesión</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

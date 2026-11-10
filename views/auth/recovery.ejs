@@ -1,0 +1,38 @@
+<%- include('../layouts/header') %>
+
+<div class="row justify-content-center my-5">
+  <div class="col-md-5">
+    <div class="custom-card p-4 p-md-5 text-center">
+      <h2 class="fw-bold mb-4">Recuperar Contraseña</h2>
+
+      <% if (mensaje) { %>
+        <div class="alert alert-info py-2 small" role="alert">
+          <%= mensaje %>
+        </div>
+      <% } %>
+
+      <% if (error) { %>
+        <div class="alert alert-danger py-2 small" role="alert">
+          <%= error %>
+        </div>
+      <% } %>
+
+      <p class="text-muted small mb-4">
+        Ingresa tu correo electrónico registrado y te enviaremos un enlace seguro para restablecer tu contraseña.
+      </p>
+
+      <form action="/auth/recovery" method="POST">
+        <div class="mb-4">
+          <input type="email" name="correo" class="form-control form-control-custom text-center" placeholder="Correo Electrónico" required>
+        </div>
+        <button type="submit" class="btn-dark-pill w-100 py-2">Enviar verificación</button>
+      </form>
+
+      <div class="mt-4 small">
+        <a href="/auth/login" class="text-muted text-decoration-none">← Volver al inicio de sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

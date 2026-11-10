@@ -1,0 +1,179 @@
+<%- include('../layouts/header') %>
+
+<div class="row g-4 my-3">
+  <% if (mensaje) { %>
+    <div class="col-12">
+      <div class="alert alert-info py-2 small" role="alert">
+        <%= mensaje %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- TARJETA IZQUIERDA: DATOS PERSONALES -->
+  <div class="col-lg-6">
+    <div class="custom-card h-100">
+      <div class="d-flex align-items-center mb-4">
+        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">
+          <%= usuario.nombre_completo ? usuario.nombre_completo.charAt(0) : 'S' %>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold"><%= usuario.nombre_completo %></h4>
+          <span class="text-muted small">Cédula: <%= usuario.cedula %></span>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <p class="mb-1 text-muted small">Correo Electrónico:</p>
+        <p class="fw-semibold"><%= usuario.correo %></p>
+        
+        <p class="mb-1 text-muted small">Teléfono:</p>
+        <p class="fw-semibold"><%= usuario.telefono || 'No registrado' %></p>
+        
+        <p class="mb-1 text-muted small">Dirección:</p>
+        <p class="fw-semibold"><%= usuario.direccion || 'No registrada' %></p>
+        
+        <p class="mb-1 text-muted small">Fecha de Nacimiento:</p>
+        <p class="fw-semibold"><%= usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento).toLocaleDateString() : 'N/A' %></p>
+      </div>
+
+      <button type="button" class="btn-dark-pill btn-sm-pill" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">
+        Editar Perfil
+      </button>
+    </div>
+  </div>
+
+  <!-- TARJETA DERECHA: MEMBRESIA Y ACCIONES -->
+  <div class="col-lg-6">
+    <div class="custom-card mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <span class="badge bg-warning text-dark mb-2 px-3 py-2">MEMBERSHIP</span>
+          <h5 class="fw-bold mb-1">Tipo de Membresía</h5>
+          <p class="text-success fw-bold text-capitalize mb-1"><%= membresia.tipo || 'Individual' %></p>
+          <p class="text-muted small mb-0">Renovación: <%= membresia.fecha_renovacion ? new Date(membresia.fecha_renovacion).toLocaleDateString() : '01/01/2027' %></p>
+        </div>
+        <div class="text-end">
+          <span class="text-muted small d-block">Cuota Mensual</span>
+          <span class="fs-4 fw-bold">CRC <%= Number(membresia.monto_cuota || 35000).toLocaleString() %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCIONES RAPIDAS -->
+    <div class="row g-3">
+      <div class="col-sm-4">
+        <a href="/socio/reservar" class="custom-card text-decoration-none d-block text-center p-3 h-100">
+          <span class="fs-3 d-block mb-1">📅</span>
+          <span class="small fw-bold text-dark d-block">Realizar nueva reserva</span>
+        </a>
+      </div>
+      <div class="col-sm-4">
+        <a href="/socio/reservar" class="custom-card text-decoration-none d-block text-center p-3 h-100">
+          <span class="fs-3 d-block mb-1">👥</span>
+          <span class="small fw-bold text-dark d-block">Registrar Invitado</span>
+        </a>
+      </div>
+      <div class="col-sm-4">
+        <button type="button" class="custom-card w-100 text-decoration-none border-0 text-center p-3 h-100" data-bs-toggle="modal" data-bs-target="#modalBeneficiarios">
+          <span class="fs-3 d-block mb-1">👨‍👩‍👧</span>
+          <span class="small fw-bold text-dark d-block">Añadir Beneficiarios</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- LISTA DE BENEFICIARIOS (SI APLICA) -->
+    <% if (beneficiarios && beneficiarios.length > 0) { %>
+      <div class="custom-card mt-3 p-3">
+        <h6 class="fw-bold mb-2 small text-muted">Beneficiarios Registrados:</h6>
+        <ul class="list-group list-group-flush small">
+          <% beneficiarios.forEach(b => { %>
+            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+              <span><%= b.nombre_completo %> (<%= b.parentesco %>)</span>
+              <span class="text-muted"><%= b.cedula %></span>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PERFIL -->
+<div class="modal fade" id="modalEditarPerfil" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content custom-card p-3">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Editar Perfil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/auth/perfil/editar" method="POST">
+        <div class="modal-body border-0">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Nombre Completo</label>
+            <input type="text" name="nombre_completo" class="form-control form-control-custom" value="<%= usuario.nombre_completo %>" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Teléfono</label>
+            <input type="tel" name="telefono" class="form-control form-control-custom" value="<%= usuario.telefono || '' %>">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Dirección</label>
+            <input type="text" name="direccion" class="form-control form-control-custom" value="<%= usuario.direccion || '' %>">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Fecha de Nacimiento</label>
+            <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" value="<%= usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento).toISOString().split('T')[0] : '' %>">
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-dark-pill btn-sm-pill">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BENEFICIARIOS -->
+<div class="modal fade" id="modalBeneficiarios" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content custom-card p-3">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Añadir Beneficiario Adicional</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/auth/perfil/beneficiarios" method="POST">
+        <div class="modal-body border-0">
+          <p class="small text-muted mb-3">Disponible únicamente para membresías de tipo Familiar.</p>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Nombre Completo</label>
+            <input type="text" name="nombre_completo" class="form-control form-control-custom" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Cédula</label>
+            <input type="text" name="cedula" class="form-control form-control-custom" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Parentesco</label>
+            <select name="parentesco" class="form-select form-control-custom" required>
+              <option value="Hijo(a)">Hijo(a)</option>
+              <option value="Cónyuge">Cónyuge</option>
+              <option value="Padre/Madre">Padre/Madre</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Fecha de Nacimiento</label>
+            <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" required>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-dark-pill btn-sm-pill">Registrar Beneficiario</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

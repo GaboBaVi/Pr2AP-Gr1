@@ -1,0 +1,126 @@
+<%- include('../layouts/header') %>
+
+<div class="row justify-content-center my-3">
+  <div class="col-lg-11">
+    <div class="custom-card p-4 p-md-5">
+      <h3 class="fw-bold mb-4 text-center">Formulario de Reservas e Invitados</h3>
+
+      <% if (error) { %>
+        <div class="alert alert-danger py-2 small mb-4" role="alert">
+          <%= error %>
+        </div>
+      <% } %>
+
+      <form action="/socio/reservar" method="POST">
+        <div class="row g-4">
+          <!-- PASO 1: SELECCION DE INSTALACION -->
+          <div class="col-md-3">
+            <div class="border rounded-4 p-3 bg-white h-100">
+              <span class="badge bg-secondary mb-2">Paso #1</span>
+              <h6 class="fw-bold mb-3">Selección de la Instalación</h6>
+              <div class="mb-3">
+                <select name="instalacion_id" class="form-select form-control-custom" required>
+                  <option value="" disabled selected>Selecciona instalación...</option>
+                  <% instalaciones.forEach(inst => { %>
+                    <option value="<%= inst.id %>" <%= inst.bloqueada_mantenimiento ? 'disabled' : '' %>>
+                      <%= inst.nombre %> <%= inst.bloqueada_mantenimiento ? '(Bloqueada)' : '' %>
+                    </option>
+                  <% }) %>
+                </select>
+              </div>
+              <small class="text-muted d-block mt-2">
+                El sistema valida automáticamente que no existan traslapes ni mantenimientos programados.
+              </small>
+            </div>
+          </div>
+
+          <!-- PASO 2: FECHA, HORA Y AFORO -->
+          <div class="col-md-3">
+            <div class="border rounded-4 p-3 bg-white h-100">
+              <span class="badge bg-secondary mb-2">Paso #2</span>
+              <h6 class="fw-bold mb-3">Indicar Fecha, Hora y Aforo</h6>
+              <div class="mb-2">
+                <label class="form-label small text-muted mb-0">Fecha de Reserva</label>
+                <input type="date" name="fecha" class="form-control form-control-custom" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small text-muted mb-0">Hora de Inicio</label>
+                <input type="time" name="hora_inicio" class="form-control form-control-custom" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small text-muted mb-0">Hora de Fin</label>
+                <input type="time" name="hora_fin" class="form-control form-control-custom" required>
+              </div>
+              <div class="mb-2">
+                <label class="form-label small text-muted mb-0">Número de Personas</label>
+                <input type="number" name="num_personas" min="1" max="100" class="form-control form-control-custom" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 3: SERVICIOS ADICIONALES -->
+          <div class="col-md-3">
+            <div class="border rounded-4 p-3 bg-white h-100">
+              <span class="badge bg-secondary mb-2">Paso #3</span>
+              <h6 class="fw-bold mb-2">Servicios Adicionales</h6>
+              <p class="small text-muted mb-3">(Opcionales)</p>
+              
+              <div class="form-check mb-2 small">
+                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="palos_golf" id="s1">
+                <label class="form-check-label" for="s1">Alquiler de Palos de Golf</label>
+              </div>
+              <div class="form-check mb-2 small">
+                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="pelotas_golf" id="s2">
+                <label class="form-check-label" for="s2">Alquiler de Pelotas de Golf</label>
+              </div>
+              <div class="form-check mb-2 small">
+                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="raquetas" id="s3">
+                <label class="form-check-label" for="s3">Alquiler de Raquetas Tenis</label>
+              </div>
+              <div class="form-check mb-2 small">
+                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="pelotas_tenis" id="s4">
+                <label class="form-check-label" for="s4">Alquiler de Pelotas Tenis</label>
+              </div>
+              <div class="form-check mb-2 small">
+                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="piscina" id="s5">
+                <label class="form-check-label" for="s5">Accesorios para Piscina</label>
+              </div>
+              <div class="form-check mb-3 small">
+                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="mobiliario" id="s6">
+                <label class="form-check-label" for="s6">Montaje de Mobiliario</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 4: REGISTRO DE INVITADO -->
+          <div class="col-md-3">
+            <div class="border rounded-4 p-3 bg-white h-100">
+              <span class="badge bg-secondary mb-2">Paso #4</span>
+              <h6 class="fw-bold mb-2">Registro de Invitado</h6>
+              <p class="small text-muted mb-3">(Si asiste con acompañante)</p>
+
+              <div class="mb-2">
+                <input type="text" name="invitado_nombre" class="form-control form-control-custom" placeholder="Nombre acompañante">
+              </div>
+              <div class="mb-2">
+                <input type="text" name="invitado_cedula" class="form-control form-control-custom" placeholder="Cédula acompañante">
+              </div>
+              <div class="mb-3">
+                <input type="text" name="invitado_parentesco" class="form-control form-control-custom" placeholder="Parentesco / Relación">
+              </div>
+              <small class="text-muted d-block mb-3">
+                El sistema valida el límite mensual de invitados según tu membresía.
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <button type="submit" class="btn-dark-pill px-5 py-2">Confirmar Reserva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>
