@@ -262,7 +262,8 @@ const authController = {
   async postEditarBeneficiario(req, res) {
     try {
       const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
-      if (!membresia) {
+      if (!membresia || membresia.tipo !== 'familiar') {
+        req.session.mensajePerfil = 'Solo las membresías de tipo Familiar permiten gestionar beneficiarios.';
         return res.redirect('/auth/perfil');
       }
 
@@ -290,7 +291,8 @@ const authController = {
   async postEliminarBeneficiario(req, res) {
     try {
       const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
-      if (!membresia) {
+      if (!membresia || membresia.tipo !== 'familiar') {
+        req.session.mensajePerfil = 'Solo las membresías de tipo Familiar permiten gestionar beneficiarios.';
         return res.redirect('/auth/perfil');
       }
 

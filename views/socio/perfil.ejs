@@ -74,14 +74,19 @@
         </a>
       </div>
       <div class="col-sm-4">
+        <% const esFamiliar = membresia && membresia.tipo && membresia.tipo.toLowerCase() === 'familiar'; %>
         <% const cantBeneficiarios = (beneficiarios ? beneficiarios.length : 0); %>
         <% const maxBeneficiarios = (membresia && membresia.limite_beneficiarios) ? membresia.limite_beneficiarios : 4; %>
         <button type="button" class="custom-card w-100 text-decoration-none border-0 text-center p-3 h-100 position-relative" data-bs-toggle="modal" data-bs-target="#modalBeneficiarios">
           <i class="bi bi-people fs-2 d-block mb-2 text-dark"></i>
           <span class="small fw-bold text-dark d-block">Añadir Beneficiarios</span>
-          <span class="badge <%= cantBeneficiarios >= maxBeneficiarios ? 'bg-secondary' : 'bg-primary' %> mt-1">
-            <%= cantBeneficiarios %>/<%= maxBeneficiarios %>
-          </span>
+          <% if (esFamiliar) { %>
+            <span class="badge <%= cantBeneficiarios >= maxBeneficiarios ? 'bg-secondary' : 'bg-primary' %> mt-1">
+              <%= cantBeneficiarios %>/<%= maxBeneficiarios %>
+            </span>
+          <% } else { %>
+            <span class="badge bg-secondary mt-1">Solo Familiar</span>
+          <% } %>
         </button>
       </div>
     </div>
@@ -92,11 +97,18 @@
       <% const mBen = (membresia && membresia.limite_beneficiarios) ? membresia.limite_beneficiarios : 4; %>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h6 class="fw-bold mb-0 small text-muted">Beneficiarios Registrados</h6>
-        <span class="badge bg-secondary">
-          <%= cBen %>/<%= mBen %>
-        </span>
+        <% if (esFamiliar) { %>
+          <span class="badge bg-secondary"><%= cBen %>/<%= mBen %></span>
+        <% } else { %>
+          <span class="badge bg-secondary">No disponible</span>
+        <% } %>
       </div>
-      <% if (beneficiarios && beneficiarios.length > 0) { %>
+      <% if (!esFamiliar) { %>
+        <div class="p-3 bg-light rounded-3 text-center my-2">
+          <i class="bi bi-info-circle text-muted fs-4 d-block mb-1"></i>
+          <span class="text-muted small">Tu membresía actual es <strong><%= membresia.tipo ? (membresia.tipo.charAt(0).toUpperCase() + membresia.tipo.slice(1)) : 'Individual' %></strong>. Esta sección y el registro de beneficiarios están reservados exclusivamente para membresías <strong>Familiares</strong>.</span>
+        </div>
+      <% } else if (beneficiarios && beneficiarios.length > 0) { %>
         <ul class="list-group list-group-flush small">
           <% beneficiarios.forEach(b => { %>
             <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
@@ -173,55 +185,78 @@
 <div class="modal fade" id="modalBeneficiarios" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content custom-card p-3">
-      <% const currentBens = (beneficiarios ? beneficiarios.length : 0); %>
-      <% const limitBens = (membresia && membresia.limite_beneficiarios) ? membresia.limite_beneficiarios : 4; %>
-      <div class="modal-header border-0">
-        <div>
-          <h5 class="modal-title fw-bold mb-0">Añadir Beneficiario Adicional</h5>
-          <small class="text-muted">Cupos: <strong><%= currentBens %>/<%= limitBens %></strong></small>
+      <% const esFamiliarModal = membresia && membresia.tipo && membresia.tipo.toLowerCase() === 'familiar'; %>
+      <% if (!esFamiliarModal) { %>
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold">Apartado de Beneficiarios</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <% if (currentBens >= limitBens) { %>
-        <div class="modal-body border-0">
-          <div class="alert alert-info py-3 mb-0 small">
-            <i class="bi bi-info-circle me-1"></i> Ya has alcanzado el límite máximo de <strong><%= limitBens %> beneficiarios</strong> permitido por tu membresía familiar.
+        <div class="modal-body border-0 text-center py-4">
+          <div class="mb-3">
+            <i class="bi bi-shield-lock text-warning" style="font-size: 3.2rem;"></i>
+          </div>
+          <h5 class="fw-bold mb-2">Acceso No Disponible</h5>
+          <p class="text-muted mb-2">
+            No puedes acceder a este apartado porque tu membresía actual es de tipo <strong><%= membresia.tipo ? (membresia.tipo.charAt(0).toUpperCase() + membresia.tipo.slice(1)) : 'Individual' %></strong> y no es una membresía familiar.
+          </p>
+          <div class="alert alert-warning text-start small mb-0 mt-3">
+            <i class="bi bi-info-circle me-1"></i> El registro y gestión de beneficiarios adicionales está habilitado exclusivamente para membresías de categoría <strong>Familiar</strong>.
           </div>
         </div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cerrar</button>
+        <div class="modal-footer border-0 justify-content-center">
+          <button type="button" class="btn btn-secondary btn-cancel-modal px-4" data-bs-dismiss="modal">Entendido</button>
         </div>
       <% } else { %>
-        <form action="/auth/perfil/beneficiarios" method="POST">
+        <% const currentBens = (beneficiarios ? beneficiarios.length : 0); %>
+        <% const limitBens = (membresia && membresia.limite_beneficiarios) ? membresia.limite_beneficiarios : 4; %>
+        <div class="modal-header border-0">
+          <div>
+            <h5 class="modal-title fw-bold mb-0">Añadir Beneficiario Adicional</h5>
+            <small class="text-muted">Cupos: <strong><%= currentBens %>/<%= limitBens %></strong></small>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <% if (currentBens >= limitBens) { %>
           <div class="modal-body border-0">
-            <p class="small text-muted mb-3">Disponible únicamente para membresías de tipo Familiar (límite máximo: <%= limitBens %> beneficiarios).</p>
-            <div class="mb-3">
-              <label class="form-label small text-muted">Nombre Completo</label>
-              <input type="text" name="nombre_completo" class="form-control form-control-custom" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-muted">Cédula</label>
-              <input type="text" name="cedula" class="form-control form-control-custom" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$" title="Cédula válida de 9 dígitos (ej. 1-1234-0567)" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-muted">Parentesco</label>
-              <select name="parentesco" class="form-select form-control-custom" required>
-                <option value="Hijo(a)">Hijo(a)</option>
-                <option value="Cónyuge">Cónyuge</option>
-                <option value="Padre/Madre">Padre/Madre</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small text-muted">Fecha de Nacimiento</label>
-              <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" required>
+            <div class="alert alert-info py-3 mb-0 small">
+              <i class="bi bi-info-circle me-1"></i> Ya has alcanzado el límite máximo de <strong><%= limitBens %> beneficiarios</strong> permitido por tu membresía familiar.
             </div>
           </div>
           <div class="modal-footer border-0">
-            <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn-dark-pill">Registrar Beneficiario</button>
+            <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cerrar</button>
           </div>
-        </form>
+        <% } else { %>
+          <form action="/auth/perfil/beneficiarios" method="POST">
+            <div class="modal-body border-0">
+              <p class="small text-muted mb-3">Disponible únicamente para membresías de tipo Familiar (límite máximo: <%= limitBens %> beneficiarios).</p>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Nombre Completo</label>
+                <input type="text" name="nombre_completo" class="form-control form-control-custom" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Cédula</label>
+                <input type="text" name="cedula" class="form-control form-control-custom" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$" title="Cédula válida de 9 dígitos (ej. 1-1234-0567)" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Parentesco</label>
+                <select name="parentesco" class="form-select form-control-custom" required>
+                  <option value="Hijo(a)">Hijo(a)</option>
+                  <option value="Cónyuge">Cónyuge</option>
+                  <option value="Padre/Madre">Padre/Madre</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Fecha de Nacimiento</label>
+                <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" required>
+              </div>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn-dark-pill">Registrar Beneficiario</button>
+            </div>
+          </form>
+        <% } %>
       <% } %>
     </div>
   </div>
