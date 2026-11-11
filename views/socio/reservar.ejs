@@ -23,7 +23,7 @@
               <span class="badge bg-secondary mb-2">Paso #1</span>
               <h6 class="fw-bold mb-3">Selección de la Instalación</h6>
               <div class="mb-3">
-                <select name="instalacion_id" id="selectInstalacion" class="form-select form-control-custom" required onchange="actualizarDetallesInstalacion()">
+                <select name="instalacion_id" id="selectInstalacion" class="form-select form-control-custom" required onchange="actualizarDetallesInstalacion()" oninput="actualizarDetallesInstalacion()">
                   <option value="" disabled <%= !datosPrevios.instalacion_id ? 'selected' : '' %>>Selecciona instalación...</option>
                   <% instalaciones.forEach(inst => { %>
                     <option value="<%= inst.id %>" 
@@ -239,59 +239,94 @@ function validarFechaYHoras() {
 
 function actualizarDetallesInstalacion() {
   const select = document.getElementById('selectInstalacion');
-  const selectedOption = select.options[select.selectedIndex];
+  if (!select) return;
+
+  const instId = select.value;
+  const selectedOption = select.querySelector(`option[value="${instId}"]`) || (select.selectedIndex >= 0 ? select.options[select.selectedIndex] : null);
   const infoBox = document.getElementById('infoInstalacion');
   const sinServicios = document.getElementById('sinServicios');
 
-  if (selectedOption && selectedOption.value) {
+  if (selectedOption && instId) {
     const aforo = parseInt(selectedOption.getAttribute('data-aforo'), 10) || 1;
-    const apertura = selectedOption.getAttribute('data-apertura');
-    const cierre = selectedOption.getAttribute('data-cierre');
+    const apertura = selectedOption.getAttribute('data-apertura') || '08:00';
+    const cierre = selectedOption.getAttribute('data-cierre') || '20:00';
 
-    document.getElementById('txtAforo').innerText = aforo;
-    document.getElementById('txtHorario').innerText = `${apertura} a ${cierre}`;
-    infoBox.classList.remove('d-none');
+    // 1. Paso 1: Info box
+    const txtAforo = document.getElementById('txtAforo');
+    if (txtAforo) txtAforo.textContent = aforo;
+    const txtHorario = document.getElementById('txtHorario');
+    if (txtHorario) txtHorario.textContent = `${apertura} a ${cierre}`;
+    if (infoBox) infoBox.classList.remove('d-none');
 
-    // Ajustar maximo de personas y badges de capacidad
+    // 2. Paso 2: Aforo y capacidad máxima
     const inputPersonas = document.getElementById('inputNumPersonas');
     const badgeAforo = document.getElementById('badgeAforoMaximo');
     const txtLimite = document.getElementById('txtLimiteAforo');
     const avisoExceso = document.getElementById('avisoExcesoAforo');
 
-    inputPersonas.max = aforo;
-    if (badgeAforo) badgeAforo.textContent = `Máx: ${aforo}`;
-    if (txtLimite) txtLimite.textContent = aforo;
-
-    // Si el valor actual supera el aforo permitido, reducirlo al tope
-    if (parseInt(inputPersonas.value, 10) > aforo) {
-      inputPersonas.value = aforo;
+    if (inputPersonas) {
+      inputPersonas.max = aforo;
+      if (parseInt(inputPersonas.value, 10) > aforo) {
+        inputPersonas.value = aforo;
+      }
+      inputPersonas.classList.remove('is-invalid');
     }
-    inputPersonas.classList.remove('is-invalid');
+    if (badgeAforo) badgeAforo.textContent = `Máx: ${aforo} personas`;
+    if (txtLimite) txtLimite.textContent = aforo;
     if (avisoExceso) avisoExceso.classList.add('d-none');
 
-    // Ajustar min/max horas
-    document.getElementById('inputHoraInicio').min = apertura;
-    document.getElementById('inputHoraInicio').max = cierre;
-    document.getElementById('inputHoraFin').min = apertura;
-    document.getElementById('inputHoraFin').max = cierre;
+    // Ajustar límites de horario
+    const inputHoraInicio = document.getElementById('inputHoraInicio');
+    if (inputHoraInicio) {
+      inputHoraInicio.min = apertura;
+      inputHoraInicio.max = cierre;
+    }
+    const inputHoraFin = document.getElementById('inputHoraFin');
+    if (inputHoraFin) {
+      inputHoraFin.min = apertura;
+      inputHoraFin.max = cierre;
+    }
 
-    // Cargar horarios disponibles para la nueva instalacion
-    cargarHorariosDisponibles();
-
-    // Mostrar solo servicios de esta instalacion
-    const instId = selectedOption.value;
-    sinServicios.classList.add('d-none');
+    // 3. Paso 3: Mostrar inmediatamente los servicios de esta instalación
+    if (sinServicios) sinServicios.classList.add('d-none');
     document.querySelectorAll('.servicio-item').forEach(div => {
-      if (div.getAttribute('data-inst') === instId) {
+      const itemInst = div.getAttribute('data-inst');
+      if (String(itemInst) === String(instId)) {
         div.classList.remove('d-none');
       } else {
         div.classList.add('d-none');
-        div.querySelectorAll('.check-servicio').forEach(chk => chk.checked = false);
+        div.querySelectorAll('.check-servicio').forEach(chk => { chk.checked = false; });
       }
     });
+
+    // 4. Paso 2: Cargar horarios disponibles para la nueva instalación
+    try {
+      cargarHorariosDisponibles();
+    } catch (errH) {
+      console.error('Error al actualizar horarios disponibles:', errH);
+    }
   } else {
-    infoBox.classList.add('d-none');
-    sinServicios.classList.remove('d-none');
+    // Si no hay instalación seleccionada
+    if (infoBox) infoBox.classList.add('d-none');
+    if (sinServicios) sinServicios.classList.remove('d-none');
+    document.querySelectorAll('.servicio-item').forEach(div => {
+      div.classList.add('d-none');
+      div.querySelectorAll('.check-servicio').forEach(chk => { chk.checked = false; });
+    });
+    const badgeAforo = document.getElementById('badgeAforoMaximo');
+    if (badgeAforo) badgeAforo.textContent = 'Máx: -';
+    const txtLimite = document.getElementById('txtLimiteAforo');
+    if (txtLimite) txtLimite.textContent = '-';
+    const inputPersonas = document.getElementById('inputNumPersonas');
+    if (inputPersonas) {
+      inputPersonas.max = 100;
+      inputPersonas.classList.remove('is-invalid');
+    }
+    const avisoExceso = document.getElementById('avisoExcesoAforo');
+    if (avisoExceso) avisoExceso.classList.add('d-none');
+    try {
+      cargarHorariosDisponibles();
+    } catch (e) {}
   }
 }
 
@@ -611,11 +646,20 @@ function eliminarFilaInvitado(id) {
 
 // Ejecutar al cargar
 document.addEventListener('DOMContentLoaded', () => {
+  const selectInst = document.getElementById('selectInstalacion');
+  if (selectInst) {
+    selectInst.addEventListener('change', actualizarDetallesInstalacion);
+    selectInst.addEventListener('input', actualizarDetallesInstalacion);
+  }
+
   const inputFecha = document.getElementById('inputFecha');
-  const hoy = obtenerFechaHoy();
-  inputFecha.min = hoy;
-  inputFecha.addEventListener('change', cargarHorariosDisponibles);
-  inputFecha.addEventListener('input', cargarHorariosDisponibles);
+  if (inputFecha) {
+    const hoy = obtenerFechaHoy();
+    inputFecha.min = hoy;
+    inputFecha.addEventListener('change', cargarHorariosDisponibles);
+    inputFecha.addEventListener('input', cargarHorariosDisponibles);
+  }
+
   actualizarDetallesInstalacion();
   cargarHorariosDisponibles();
 });
