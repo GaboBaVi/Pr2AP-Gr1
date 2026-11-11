@@ -214,9 +214,11 @@ const cobrosController = {
       const plantillas = await Notificacion.listarPlantillas();
       res.render('admin/notificaciones', {
         plantillas,
-        mensaje: req.session.mensajePlantilla || null
+        mensaje: req.session.mensajePlantilla || null,
+        error: req.session.errorPlantilla || null
       });
       delete req.session.mensajePlantilla;
+      delete req.session.errorPlantilla;
     } catch (err) {
       console.error('Error en getAdminNotificaciones:', err);
       res.redirect('/admin/dashboard');
@@ -231,6 +233,65 @@ const cobrosController = {
       res.redirect('/admin/notificaciones');
     } catch (err) {
       console.error('Error en postActualizarPlantilla:', err);
+      req.session.errorPlantilla = 'Error interno al actualizar la plantilla.';
+      res.redirect('/admin/notificaciones');
+    }
+  },
+
+  async postCrearPlantilla(req, res) {
+    const { nombre, clave, asunto, cuerpo } = req.body;
+    try {
+      if (!nombre || !asunto || !cuerpo) {
+        req.session.errorPlantilla = 'Todos los campos obligatorios deben completarse.';
+        return res.redirect('/admin/notificaciones');
+      }
+
+      let claveFinal = clave && clave.trim() 
+        ? clave.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_')
+        : nombre.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+      claveFinal = claveFinal.replace(/_+/g, '_').substring(0, 50);
+
+      const existente = await Notificacion.obtenerPlantilla(claveFinal);
+      if (existente) {
+        req.session.errorPlantilla = `Ya existe una plantilla registrada con el identificador "${claveFinal}".`;
+        return res.redirect('/admin/notificaciones');
+      }
+
+      await Notificacion.crearPlantilla({
+        clave: claveFinal,
+        nombre: nombre.trim(),
+        asunto: asunto.trim(),
+        cuerpo: cuerpo.trim()
+      });
+
+      req.session.mensajePlantilla = `Plantilla "${nombre.trim()}" creada y agregada con éxito.`;
+      res.redirect('/admin/notificaciones');
+    } catch (err) {
+      console.error('Error en postCrearPlantilla:', err);
+      req.session.errorPlantilla = 'Error interno al guardar la nueva plantilla.';
+      res.redirect('/admin/notificaciones');
+    }
+  },
+
+  async postEliminarPlantilla(req, res) {
+    const { clave } = req.body;
+    try {
+      const baseTemplates = [
+        'bienvenida', 'reserva_confirmada', 'reserva_cancelada', 
+        'estado_cuenta', 'recordatorio_pago', 'cuenta_desactivada',
+        'mantenimiento_cancelacion', 'mantenimiento_restablecido'
+      ];
+      if (baseTemplates.includes(clave)) {
+        req.session.errorPlantilla = 'Las plantillas base del sistema no pueden ser eliminadas.';
+        return res.redirect('/admin/notificaciones');
+      }
+
+      await Notificacion.eliminarPlantilla(clave);
+      req.session.mensajePlantilla = 'Plantilla personalizada eliminada correctamente.';
+      res.redirect('/admin/notificaciones');
+    } catch (err) {
+      console.error('Error en postEliminarPlantilla:', err);
+      req.session.errorPlantilla = 'Error al eliminar la plantilla.';
       res.redirect('/admin/notificaciones');
     }
   },

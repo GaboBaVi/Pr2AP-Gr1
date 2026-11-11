@@ -22,6 +22,24 @@ const Notificacion = {
     return res.rows[0];
   },
 
+  async crearPlantilla({ clave, nombre, asunto, cuerpo }) {
+    const res = await db.query(
+      `INSERT INTO plantillas_notificacion (clave, nombre, asunto, cuerpo)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
+      [clave, nombre, asunto, cuerpo]
+    );
+    return res.rows[0];
+  },
+
+  async eliminarPlantilla(clave) {
+    const res = await db.query(
+      `DELETE FROM plantillas_notificacion WHERE clave = $1 RETURNING *`,
+      [clave]
+    );
+    return res.rows[0];
+  },
+
   async registrarEnBitacora({ usuario_id, tipo_notificacion, destinatario_correo, asunto, estado_entrega }) {
     const res = await db.query(
       `INSERT INTO bitacora_notificaciones (usuario_id, tipo_notificacion, destinatario_correo, asunto, estado_entrega)

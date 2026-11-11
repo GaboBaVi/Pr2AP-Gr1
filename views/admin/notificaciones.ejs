@@ -8,17 +8,30 @@
           <h4 class="fw-bold mb-1">Centro de Notificaciones</h4>
           <span class="text-muted small">Configuración de plantillas automáticas por correo electrónico</span>
         </div>
-        <a href="/admin/bitacora-notificaciones" class="btn-dark-pill btn-sm-pill">Bitácora de Envíos</a>
+        <div class="d-flex gap-2 align-items-center">
+          <button type="button" class="btn btn-outline-dark d-inline-flex align-items-center" style="height: 38px; border-radius: 8px; padding: 0 1.2rem;" data-bs-toggle="modal" data-bs-target="#modalNuevaPlantilla">
+            <i class="bi bi-plus-lg me-1"></i> Nueva Plantilla
+          </button>
+          <a href="/admin/bitacora-notificaciones" class="btn-dark-pill btn-sm-pill d-inline-flex align-items-center" style="height: 38px;">Bitácora de Envíos</a>
+        </div>
       </div>
 
       <% if (mensaje) { %>
-        <div class="alert alert-success py-2 small mb-3">
+        <div class="alert alert-success alert-dismissible fade show py-2 small mb-3">
           <%= mensaje %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <% if (error) { %>
+        <div class="alert alert-danger alert-dismissible fade show py-2 small mb-3">
+          <%= error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       <% } %>
 
       <!-- CARRUSEL / TABS DE PLANTILLAS -->
-      <ul class="nav nav-pills mb-4 nav-fill" id="templatesTab" role="tablist">
+      <ul class="nav nav-pills mb-4 nav-fill flex-wrap gap-1" id="templatesTab" role="tablist">
         <% plantillas.forEach((p, idx) => { %>
           <li class="nav-item" role="presentation">
             <button class="nav-link <%= idx === 0 ? 'active bg-dark' : 'text-dark' %>" 
@@ -33,9 +46,22 @@
       </ul>
 
       <div class="tab-content" id="templatesTabContent">
+        <% const baseTemplates = ['bienvenida', 'reserva_confirmada', 'reserva_cancelada', 'estado_cuenta', 'recordatorio_pago', 'cuenta_desactivada', 'mantenimiento_cancelacion', 'mantenimiento_restablecido']; %>
         <% plantillas.forEach((p, idx) => { %>
           <div class="tab-pane fade <%= idx === 0 ? 'show active' : '' %>" id="pane-<%= p.clave %>">
             <div class="card p-4 border-0 shadow-sm bg-white rounded-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge bg-light text-dark border">Identificador: <code><%= p.clave %></code></span>
+                <% if (!baseTemplates.includes(p.clave)) { %>
+                  <form action="/admin/notificaciones/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar la plantilla personalizada \'<%= p.nombre %>\'?');">
+                    <input type="hidden" name="clave" value="<%= p.clave %>">
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Eliminar plantilla">
+                      <i class="bi bi-trash me-1"></i>Eliminar Plantilla
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+
               <form action="/admin/notificaciones/plantilla" method="POST">
                 <input type="hidden" name="clave" value="<%= p.clave %>">
                 
@@ -45,18 +71,62 @@
                 </div>
 
                 <div class="mb-3">
-                  <label class="form-label fw-bold small text-muted">Cuerpo del Mensaje (Variables soportadas: {{nombre}}, {{instalacion}}, {{fecha}}, {{monto}})</label>
+                  <label class="form-label fw-bold small text-muted">Cuerpo del Mensaje (Variables: {{nombre}}, {{instalacion}}, {{fecha}}, {{monto}}, {{hora_inicio}}, {{hora_fin}})</label>
                   <textarea name="cuerpo" rows="6" class="form-control form-control-custom" required><%= p.cuerpo %></textarea>
                 </div>
 
                 <div class="text-end">
-                  <button type="submit" class="btn-dark-pill btn-sm-pill px-4">Modificar Plantilla</button>
+                  <button type="submit" class="btn-dark-pill btn-sm-pill px-4">Guardar Cambios</button>
                 </div>
               </form>
             </div>
           </div>
         <% }) %>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA PLANTILLA -->
+<div class="modal fade" id="modalNuevaPlantilla" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content custom-card p-3">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Crear Nueva Plantilla de Notificación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/admin/notificaciones/crear" method="POST">
+        <div class="modal-body border-0">
+          <p class="small text-muted mb-3">Define una plantilla personalizada para comunicaciones oficiales del club.</p>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Nombre de la Plantilla</label>
+              <input type="text" name="nombre" class="form-control form-control-custom" placeholder="Ej: Aviso de Torneo de Tenis" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small text-muted fw-bold">Identificador / Clave (Opcional)</label>
+              <input type="text" name="clave" class="form-control form-control-custom" placeholder="Ej: aviso_torneo_tenis" pattern="^[a-zA-Z0-9_]*$" title="Solo letras, números y guiones bajos (sin espacios)">
+              <div class="form-text small">Si se deja vacío, se generará automáticamente a partir del nombre.</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted fw-bold">Asunto del Correo</label>
+            <input type="text" name="asunto" class="form-control form-control-custom" placeholder="Ej: ¡Gran Torneo de Tenis en Club Valle Alto!" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small text-muted fw-bold">Cuerpo del Mensaje</label>
+            <textarea name="cuerpo" rows="6" class="form-control form-control-custom" placeholder="Estimado/a {{nombre}}, te invitamos a participar..." required></textarea>
+            <div class="form-text small">Variables disponibles que puedes usar: <code>{{nombre}}</code>, <code>{{instalacion}}</code>, <code>{{fecha}}</code>, <code>{{monto}}</code>, <code>{{hora_inicio}}</code>, <code>{{hora_fin}}</code>.</div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-dark-pill">Crear y Guardar Plantilla</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

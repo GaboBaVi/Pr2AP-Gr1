@@ -16,6 +16,8 @@ router.post('/admin/cobros/recordatorios', estaAutenticado, esAdmin, permitirRol
 // Centro de notificaciones y bitacora (Admin General)
 router.get('/admin/notificaciones', estaAutenticado, esAdmin, permitirRoles('admin_general'), cobrosController.getAdminNotificaciones);
 router.post('/admin/notificaciones/plantilla', estaAutenticado, esAdmin, permitirRoles('admin_general'), cobrosController.postActualizarPlantilla);
+router.post('/admin/notificaciones/crear', estaAutenticado, esAdmin, permitirRoles('admin_general'), cobrosController.postCrearPlantilla);
+router.post('/admin/notificaciones/eliminar', estaAutenticado, esAdmin, permitirRoles('admin_general'), cobrosController.postEliminarPlantilla);
 router.get('/admin/bitacora-notificaciones', estaAutenticado, esAdmin, permitirRoles('admin_general'), cobrosController.getAdminBitacora);
 
 module.exports = router;
