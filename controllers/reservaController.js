@@ -5,6 +5,13 @@ const Instalacion = require('../models/instalacionModel');
 const Notificacion = require('../models/notificacionModel');
 const Cobro = require('../models/cobroModel');
 const { enviarCorreo } = require('../config/mailer');
+const db = require('../config/db');
+
+function horaEnMinutos(h) {
+  if (!h) return 0;
+  const parts = h.slice(0, 5).split(':').map(Number);
+  return parts[0] * 60 + parts[1];
+}
 
 const MAPA_SERVICIOS = {
   'palos_golf': { nombre: 'Alquiler de Palos de Golf', costo: 15000.00, instalacion_id: 1 },
@@ -59,6 +66,127 @@ const reservaController = {
     } catch (err) {
       console.error('Error en getFormularioReserva:', err);
       res.redirect('/socio/reservas');
+    }
+  },
+
+  async getDisponibilidadHoraria(req, res) {
+    const { instalacion_id, fecha, reserva_id } = req.query;
+    try {
+      if (!instalacion_id || !fecha) {
+        return res.json({ disponible: false, slots: [], motivo: 'Selecciona una instalación y fecha.' });
+      }
+
+      const inst = await Instalacion.obtenerPorId(instalacion_id);
+      if (!inst) {
+        return res.json({ disponible: false, slots: [], motivo: 'Instalación no encontrada.' });
+      }
+
+      const ahora = new Date();
+      const hoyCR = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(ahora);
+      if (fecha < hoyCR) {
+        return res.json({ disponible: false, slots: [], motivo: 'La fecha seleccionada ya pasó.' });
+      }
+
+      // Mantenimiento todo el día
+      if (inst.bloqueada_mantenimiento) {
+        if (!inst.mantenimiento_tipo || inst.mantenimiento_tipo === 'todo_el_dia') {
+          return res.json({
+            disponible: false,
+            bloqueada_total: true,
+            motivo: `La instalación ${inst.nombre} está bloqueada por mantenimiento durante todo el día.`
+          });
+        }
+      }
+
+      const horaAperturaNum = parseInt(inst.hora_apertura.slice(0, 2), 10);
+      const horaCierreNum = parseInt(inst.hora_cierre.slice(0, 2), 10);
+
+      let sqlReservas = `
+        SELECT id, hora_inicio, hora_fin, num_personas 
+        FROM reservas 
+        WHERE instalacion_id = $1 AND fecha = $2 AND estado = 'activa'
+      `;
+      const params = [instalacion_id, fecha];
+      if (reserva_id) {
+        sqlReservas += ' AND id != $3';
+        params.push(reserva_id);
+      }
+      const reservasDb = await db.query(sqlReservas, params);
+
+      const horaCR = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Costa_Rica', hour: '2-digit', minute: '2-digit', hour12: false }).format(ahora);
+      const horaActualMinutos = horaEnMinutos(horaCR);
+
+      const slotsDisponibles = [];
+      const fechaConsultaStr = new Date(fecha).toISOString().split('T')[0];
+      const fechaInstStr = inst.mantenimiento_fecha ? new Date(inst.mantenimiento_fecha).toISOString().split('T')[0] : null;
+
+      for (let h = horaAperturaNum; h < horaCierreNum; h++) {
+        const hInicioStr = (h < 10 ? '0' : '') + h + ':00';
+        const hFinStr = ((h + 1) < 10 ? '0' : '') + (h + 1) + ':00';
+        const inicioMin = h * 60;
+        const finMin = (h + 1) * 60;
+
+        // Validar si la hora ya pasó hoy
+        if (fecha === hoyCR && inicioMin <= horaActualMinutos) {
+          continue; // Ya pasó: no sale
+        }
+
+        // Validar mantenimiento por horas
+        if (inst.bloqueada_mantenimiento && inst.mantenimiento_tipo === 'horas') {
+          if (!fechaInstStr || fechaInstStr === fechaConsultaStr) {
+            const mInicioMin = horaEnMinutos(inst.mantenimiento_hora_inicio);
+            const mFinMin = horaEnMinutos(inst.mantenimiento_hora_fin);
+            if (inicioMin < mFinMin && finMin > mInicioMin) {
+              continue; // En mantenimiento: no sale
+            }
+          }
+        }
+
+        // Validar reservas previas
+        let ocupado = false;
+        let personasEnSlot = 0;
+        for (const r of reservasDb.rows) {
+          const rInicioMin = horaEnMinutos(r.hora_inicio);
+          const rFinMin = horaEnMinutos(r.hora_fin);
+          if (inicioMin < rFinMin && finMin > rInicioMin) {
+            personasEnSlot += Number(r.num_personas);
+            if (inst.aforo_maximo <= 25) {
+              ocupado = true;
+              break;
+            }
+          }
+        }
+
+        if (ocupado || personasEnSlot >= inst.aforo_maximo) {
+          continue; // Ya reservada: no sale
+        }
+
+        const format12 = (str) => {
+          let num = parseInt(str.slice(0, 2), 10);
+          const ampm = num >= 12 ? 'pm' : 'am';
+          num = num % 12 || 12;
+          return `${num}:00 ${ampm}`;
+        };
+
+        slotsDisponibles.push({
+          inicio: hInicioStr,
+          fin: hFinStr,
+          label: `${format12(hInicioStr)} - ${format12(hFinStr)}`,
+          hora: h
+        });
+      }
+
+      res.json({
+        disponible: true,
+        bloqueada_total: false,
+        slots: slotsDisponibles,
+        aforo_maximo: inst.aforo_maximo,
+        hora_apertura: inst.hora_apertura.slice(0, 5),
+        hora_cierre: inst.hora_cierre.slice(0, 5)
+      });
+    } catch (err) {
+      console.error('Error en getDisponibilidadHoraria:', err);
+      res.status(500).json({ disponible: false, slots: [], error: 'Error interno' });
     }
   },
 

@@ -35,27 +35,80 @@ const Instalacion = {
     return res.rows[0];
   },
 
-  // Obtener reservas activas afectadas por bloqueo de mantenimiento para cancelarlas
-  async cancelarReservasAfectadasPorBloqueo(instalacionId) {
+  async bloquear({ id, motivo, tipo_bloqueo, hora_inicio, hora_fin, fecha }) {
+    const tipo = tipo_bloqueo === 'horas' ? 'horas' : 'todo_el_dia';
+    const hInicio = tipo === 'horas' ? (hora_inicio || '08:00') : null;
+    const hFin = tipo === 'horas' ? (hora_fin || '18:00') : null;
+    const fBloqueo = fecha || new Date().toISOString().split('T')[0];
+
     const res = await db.query(
-      `SELECT r.id, r.usuario_id, r.fecha, r.hora_inicio, r.hora_fin, r.costo_servicios,
-              u.nombre_completo, u.correo, i.nombre as nombre_instalacion
-       FROM reservas r
-       JOIN usuarios u ON r.usuario_id = u.id
-       JOIN instalaciones i ON r.instalacion_id = i.id
-       WHERE r.instalacion_id = $1 AND r.fecha >= CURRENT_DATE AND r.estado = 'activa'`,
-      [instalacionId]
+      `UPDATE instalaciones 
+       SET bloqueada_mantenimiento = TRUE, 
+           motivo_bloqueo = $1, 
+           mantenimiento_tipo = $2, 
+           mantenimiento_hora_inicio = $3, 
+           mantenimiento_hora_fin = $4, 
+           mantenimiento_fecha = $5
+       WHERE id = $6 
+       RETURNING *`,
+      [motivo || 'Mantenimiento preventivo', tipo, hInicio, hFin, fBloqueo, id]
     );
+    return res.rows[0];
+  },
 
-    // Cancelar las reservas
-    await db.query(
-      `UPDATE reservas 
-       SET estado = 'cancelada' 
-       WHERE instalacion_id = $1 AND fecha >= CURRENT_DATE AND estado = 'activa'`,
-      [instalacionId]
+  async desbloquear(id) {
+    const res = await db.query(
+      `UPDATE instalaciones 
+       SET bloqueada_mantenimiento = FALSE, 
+           motivo_bloqueo = NULL, 
+           mantenimiento_tipo = 'todo_el_dia', 
+           mantenimiento_hora_inicio = NULL, 
+           mantenimiento_hora_fin = NULL, 
+           mantenimiento_fecha = NULL
+       WHERE id = $1 
+       RETURNING *`,
+      [id]
     );
+    return res.rows[0];
+  },
 
-    return res.rows;
+  // Obtener reservas activas afectadas por bloqueo de mantenimiento para cancelarlas
+  async cancelarReservasAfectadasPorBloqueo(instalacionId, tipo, horaInicio, horaFin, fecha) {
+    let querySelect = `
+      SELECT r.id, r.usuario_id, r.fecha, r.hora_inicio, r.hora_fin, r.costo_servicios,
+             u.nombre_completo, u.correo, i.nombre as nombre_instalacion
+      FROM reservas r
+      JOIN usuarios u ON r.usuario_id = u.id
+      JOIN instalaciones i ON r.instalacion_id = i.id
+      WHERE r.instalacion_id = $1 AND r.fecha >= CURRENT_DATE AND r.estado = 'activa'
+    `;
+    const params = [instalacionId];
+
+    if (tipo === 'horas' && horaInicio && horaFin) {
+      if (fecha) {
+        querySelect += ` AND r.fecha = $2 AND r.hora_inicio < $4 AND r.hora_fin > $3`;
+        params.push(fecha, horaInicio, horaFin);
+      } else {
+        querySelect += ` AND r.hora_inicio < $3 AND r.hora_fin > $2`;
+        params.push(horaInicio, horaFin);
+      }
+    } else if (fecha) {
+      querySelect += ` AND r.fecha = $2`;
+      params.push(fecha);
+    }
+
+    const res = await db.query(querySelect, params);
+    const afectadas = res.rows;
+
+    if (afectadas.length > 0) {
+      const ids = afectadas.map(a => a.id);
+      await db.query(
+        `UPDATE reservas SET estado = 'cancelada' WHERE id = ANY($1::int[])`,
+        [ids]
+      );
+    }
+
+    return afectadas;
   },
 
   // Construir matriz real de ocupación por franja horaria para el calendario admin
@@ -87,10 +140,23 @@ const Instalacion = {
         const aforo = inst.aforo_maximo || 1;
         const porcentaje = Math.min(100, Math.round((personas / aforo) * 100));
 
+        let estaBloqueada = false;
+        if (inst.bloqueada_mantenimiento) {
+          if (inst.mantenimiento_tipo === 'horas' && inst.mantenimiento_hora_inicio && inst.mantenimiento_hora_fin) {
+            const fechaConsultaStr = new Date(fecha).toISOString().split('T')[0];
+            const fechaInstStr = inst.mantenimiento_fecha ? new Date(inst.mantenimiento_fecha).toISOString().split('T')[0] : null;
+            if (!fechaInstStr || fechaInstStr === fechaConsultaStr) {
+              estaBloqueada = (inst.mantenimiento_hora_inicio < franja.fin && inst.mantenimiento_hora_fin > franja.inicio);
+            }
+          } else {
+            estaBloqueada = true;
+          }
+        }
+
         fila.instalaciones[inst.id] = {
           porcentaje,
           personas,
-          bloqueada: inst.bloqueada_mantenimiento
+          bloqueada: estaBloqueada
         };
       });
 

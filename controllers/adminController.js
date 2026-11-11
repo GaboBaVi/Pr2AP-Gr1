@@ -126,16 +126,28 @@ const adminController = {
   },
 
   async postToggleBloqueo(req, res) {
-    const { id, motivo } = req.body;
+    const { id, motivo, tipo_bloqueo, hora_inicio, hora_fin, fecha } = req.body;
     try {
       const instalacion = await Instalacion.obtenerPorId(id);
-      const nuevoEstadoBloqueo = !instalacion.bloqueada_mantenimiento;
+      
+      if (instalacion.bloqueada_mantenimiento) {
+        // Desbloquear / Restablecer
+        await Instalacion.desbloquear(id);
 
-      await Instalacion.toggleBloqueo(id, motivo || 'Mantenimiento preventivo');
+        req.session.mensajeInstalaciones = `La instalación "${instalacion.nombre}" fue desbloqueada y ya está disponible para reservas nuevamente.`;
+      } else {
+        // Bloquear (todo el día o por rango de horas)
+        await Instalacion.bloquear({
+          id,
+          motivo: motivo || 'Mantenimiento preventivo',
+          tipo_bloqueo,
+          hora_inicio,
+          hora_fin,
+          fecha
+        });
 
-      if (nuevoEstadoBloqueo) {
-        // Bloqueo: cancelar reservas afectadas y notificar
-        const afectadas = await Instalacion.cancelarReservasAfectadasPorBloqueo(id);
+        // Cancelar reservas afectadas según tipo y horas
+        const afectadas = await Instalacion.cancelarReservasAfectadasPorBloqueo(id, tipo_bloqueo, hora_inicio, hora_fin, fecha);
         const plantilla = await Notificacion.obtenerPlantilla('mantenimiento_cancelacion');
 
         for (const r of afectadas) {
@@ -166,12 +178,13 @@ const adminController = {
           }
         }
 
-        req.session.mensajeInstalaciones = `La instalación "${instalacion.nombre}" fue bloqueada por mantenimiento. Se cancelaron ${afectadas.length} reservas activas y se notificó por correo a los socios afectados.`;
-      } else {
-        req.session.mensajeInstalaciones = `La instalación "${instalacion.nombre}" fue desbloqueada y ya está disponible para reservas nuevamente.`;
+        const detalleTiempo = tipo_bloqueo === 'horas' 
+          ? `de ${hora_inicio} a ${hora_fin}` 
+          : 'todo el día';
+        req.session.mensajeInstalaciones = `La instalación "${instalacion.nombre}" fue bloqueada por mantenimiento (${detalleTiempo}). Se cancelaron ${afectadas.length} reservas activas y se notificó por correo a los socios.`;
       }
 
-      res.redirect('/admin/instalaciones');
+      res.redirect('/admin/instalaciones' + (fecha ? '?fecha=' + fecha : ''));
     } catch (err) {
       console.error('Error en postToggleBloqueo:', err);
       res.redirect('/admin/instalaciones');

@@ -8,6 +8,7 @@ router.use(estaAutenticado, esSocio);
 router.get('/dashboard', reservaController.getDashboard);
 router.get('/reservas', reservaController.getMisReservas);
 router.get('/reservar', reservaController.getFormularioReserva);
+router.get('/reservas/disponibilidad-horaria', reservaController.getDisponibilidadHoraria);
 router.post('/reservar', reservaController.postCrearReserva);
 router.get('/reservas/editar/:id', reservaController.getEditarReserva);
 router.post('/reservas/editar/:id', reservaController.postEditarReserva);

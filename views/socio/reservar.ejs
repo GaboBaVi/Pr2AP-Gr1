@@ -48,23 +48,48 @@
 
           <!-- PASO 2: FECHA, HORA Y AFORO -->
           <div class="col-md-3">
-            <div class="border rounded-4 p-3 bg-white h-100">
-              <span class="badge bg-secondary mb-2">Paso #2</span>
+            <div class="border rounded-4 p-3 bg-white h-100 d-flex flex-column">
+              <span class="badge bg-secondary mb-2 align-self-start">Paso #2</span>
               <h6 class="fw-bold mb-3">Indicar Fecha, Hora y Aforo</h6>
+              
               <div class="mb-2">
-                <label class="form-label small text-muted mb-0">Fecha de Reserva</label>
-                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required onchange="validarFechaYHoras()">
+                <label class="form-label small text-muted mb-0 fw-bold">Fecha de Reserva</label>
+                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required onchange="cargarHorariosDisponibles()">
               </div>
+
+              <!-- SELECTOR DE HORARIOS DISPONIBLES (SOLO LIBRES) -->
               <div class="mb-2">
-                <label class="form-label small text-muted mb-0">Hora de Inicio</label>
-                <input type="time" name="hora_inicio" id="inputHoraInicio" class="form-control form-control-custom" value="<%= datosPrevios.hora_inicio || '' %>" required>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label small text-muted mb-0 fw-bold">Horas Disponibles</label>
+                  <small id="spinnerCarga" class="text-muted d-none"><span class="spinner-border spinner-border-sm me-1"></span>Buscando...</small>
+                </div>
+
+                <div id="avisoSeleccionPrevia" class="text-muted small py-2">
+                  <i class="bi bi-info-circle me-1"></i> Selecciona la instalación y la fecha para consultar horas disponibles.
+                </div>
+
+                <div id="avisoSinHorarios" class="alert alert-warning py-2 small d-none mb-2">
+                  No hay horarios disponibles para esta instalación en la fecha seleccionada.
+                </div>
+
+                <!-- CONTENEDOR DE BOTONES DE HORARIOS LIBRES -->
+                <div id="contenedorChipsHorarios" class="d-flex flex-column gap-1 mb-2 d-none" style="max-height: 190px; overflow-y: auto;">
+                  <!-- Se generan dinámicamente -->
+                </div>
+
+                <!-- RESUMEN DEL HORARIO SELECCIONADO -->
+                <div id="cajaResumenHorario" class="p-2 bg-light rounded-3 small d-none mb-2 border">
+                  <div class="fw-bold text-dark" id="txtResumenHorario">Horario: -</div>
+                  <div class="text-muted small" id="txtDuracionHorario">Selecciona uno o varios bloques continuos</div>
+                </div>
+
+                <!-- INPUTS OCULTOS DE HORA INICIO Y FIN -->
+                <input type="hidden" name="hora_inicio" id="inputHoraInicio" value="<%= datosPrevios.hora_inicio || '' %>" required>
+                <input type="hidden" name="hora_fin" id="inputHoraFin" value="<%= datosPrevios.hora_fin || '' %>" required>
               </div>
-              <div class="mb-2">
-                <label class="form-label small text-muted mb-0">Hora de Fin</label>
-                <input type="time" name="hora_fin" id="inputHoraFin" class="form-control form-control-custom" value="<%= datosPrevios.hora_fin || '' %>" required>
-              </div>
-              <div class="mb-2">
-                <label class="form-label small text-muted mb-0">Número de Personas</label>
+
+              <div class="mb-2 mt-auto">
+                <label class="form-label small text-muted mb-0 fw-bold">Número de Personas</label>
                 <input type="number" name="num_personas" id="inputNumPersonas" min="1" max="100" class="form-control form-control-custom" value="<%= datosPrevios.num_personas || 1 %>" required>
               </div>
             </div>
@@ -205,7 +230,8 @@ function actualizarDetallesInstalacion() {
     document.getElementById('inputHoraFin').min = apertura;
     document.getElementById('inputHoraFin').max = cierre;
 
-    validarFechaYHoras();
+    // Cargar horarios disponibles para la nueva instalacion
+    cargarHorariosDisponibles();
 
     // Mostrar solo servicios de esta instalacion
     const instId = selectedOption.value;
@@ -215,13 +241,187 @@ function actualizarDetallesInstalacion() {
         div.classList.remove('d-none');
       } else {
         div.classList.add('d-none');
-        // Desmarcar checkboxes ocultos
         div.querySelectorAll('.check-servicio').forEach(chk => chk.checked = false);
       }
     });
   } else {
     infoBox.classList.add('d-none');
     sinServicios.classList.remove('d-none');
+  }
+}
+
+// GESTIÓN DINÁMICA DE HORARIOS DISPONIBLES (SOLO HORAS LIBRES)
+let slotsDisponibles = [];
+let indicesSeleccionados = [];
+
+function formatHora12(h24) {
+  if (!h24) return '';
+  const parts = h24.slice(0, 5).split(':');
+  let h = parseInt(parts[0], 10);
+  const m = parts[1];
+  const ampm = h >= 12 ? 'pm' : 'am';
+  h = h % 12 || 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+async function cargarHorariosDisponibles() {
+  const selectInst = document.getElementById('selectInstalacion');
+  const inputFecha = document.getElementById('inputFecha');
+  const spinner = document.getElementById('spinnerCarga');
+  const avisoPrevia = document.getElementById('avisoSeleccionPrevia');
+  const avisoSin = document.getElementById('avisoSinHorarios');
+  const contChips = document.getElementById('contenedorChipsHorarios');
+  const cajaResumen = document.getElementById('cajaResumenHorario');
+  const inputInicio = document.getElementById('inputHoraInicio');
+  const inputFin = document.getElementById('inputHoraFin');
+
+  const instId = selectInst.value;
+  const fecha = inputFecha.value;
+
+  // Resetear selección
+  indicesSeleccionados = [];
+  inputInicio.value = '';
+  inputFin.value = '';
+  cajaResumen.classList.add('d-none');
+
+  if (!instId || !fecha) {
+    avisoPrevia.classList.remove('d-none');
+    avisoSin.classList.add('d-none');
+    contChips.classList.add('d-none');
+    return;
+  }
+
+  avisoPrevia.classList.add('d-none');
+  avisoSin.classList.add('d-none');
+  contChips.classList.add('d-none');
+  spinner.classList.remove('d-none');
+
+  try {
+    const res = await fetch(`/socio/reservas/disponibilidad-horaria?instalacion_id=${instId}&fecha=${fecha}`);
+    const data = await res.json();
+    spinner.classList.add('d-none');
+
+    if (!data.disponible || !data.slots || data.slots.length === 0) {
+      avisoSin.textContent = data.motivo || 'No hay horarios disponibles para esta fecha (horas pasadas, reservadas o en mantenimiento).';
+      avisoSin.classList.remove('d-none');
+      contChips.classList.add('d-none');
+      slotsDisponibles = [];
+      return;
+    }
+
+    slotsDisponibles = data.slots;
+    contChips.innerHTML = '';
+    contChips.classList.remove('d-none');
+
+    slotsDisponibles.forEach((slot, index) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn btn-sm btn-outline-dark chip-horario py-1 px-2 text-start';
+      btn.style.fontSize = '0.78rem';
+      btn.style.borderRadius = '6px';
+      btn.innerHTML = `<i class="bi bi-clock me-1"></i> ${slot.label}`;
+      btn.onclick = () => manejarClickSlot(index);
+      contChips.appendChild(btn);
+    });
+
+    // Si había horas previas por error de validación, intentar restaurar selección
+    const horaInicioPrevia = "<%= datosPrevios.hora_inicio || '' %>";
+    const horaFinPrevia = "<%= datosPrevios.hora_fin || '' %>";
+    if (horaInicioPrevia && horaFinPrevia) {
+      preseleccionarRango(horaInicioPrevia, horaFinPrevia);
+    }
+  } catch (err) {
+    spinner.classList.add('d-none');
+    avisoSin.textContent = 'Error al consultar disponibilidad de horarios.';
+    avisoSin.classList.remove('d-none');
+    console.error(err);
+  }
+}
+
+function manejarClickSlot(index) {
+  if (indicesSeleccionados.length === 0) {
+    // Primer clic: selecciona solo este tiempo
+    indicesSeleccionados = [index];
+  } else if (indicesSeleccionados.length === 1 && indicesSeleccionados[0] === index) {
+    // Si vuelve a cliquear el mismo, se mantiene seleccionado
+    indicesSeleccionados = [index];
+  } else {
+    // Clic en otro slot: selección de rango continuo
+    const minIdx = Math.min(indicesSeleccionados[0], index);
+    const maxIdx = Math.max(indicesSeleccionados[indicesSeleccionados.length - 1], index);
+
+    // Verificar si todos los slots intermedios están en la lista (sin huecos reservados)
+    let continuo = true;
+    const nuevoRango = [];
+    for (let i = minIdx; i <= maxIdx; i++) {
+      nuevoRango.push(i);
+      if (i > minIdx) {
+        if (slotsDisponibles[i].hora_inicio !== slotsDisponibles[i - 1].hora_fin) {
+          continuo = false;
+          break;
+        }
+      }
+    }
+
+    if (continuo) {
+      indicesSeleccionados = nuevoRango;
+    } else {
+      // Si hay un espacio reservado intermedio, reinicia la selección en el nuevo slot
+      indicesSeleccionados = [index];
+    }
+  }
+
+  actualizarUISeleccionHorarios();
+}
+
+function preseleccionarRango(inicio, fin) {
+  const iniShort = inicio.slice(0, 5);
+  const finShort = fin.slice(0, 5);
+  const seleccion = [];
+  slotsDisponibles.forEach((s, idx) => {
+    if (s.hora_inicio >= iniShort && s.hora_fin <= finShort) {
+      seleccion.push(idx);
+    }
+  });
+  if (seleccion.length > 0) {
+    indicesSeleccionados = seleccion;
+    actualizarUISeleccionHorarios();
+  }
+}
+
+function actualizarUISeleccionHorarios() {
+  const chips = document.querySelectorAll('.chip-horario');
+  const inputInicio = document.getElementById('inputHoraInicio');
+  const inputFin = document.getElementById('inputHoraFin');
+  const cajaResumen = document.getElementById('cajaResumenHorario');
+  const txtResumen = document.getElementById('txtResumenHorario');
+  const txtDuracion = document.getElementById('txtDuracionHorario');
+
+  chips.forEach((chip, idx) => {
+    if (indicesSeleccionados.includes(idx)) {
+      chip.className = 'btn btn-sm btn-dark text-white chip-horario py-1 px-2 text-start';
+    } else {
+      chip.className = 'btn btn-sm btn-outline-dark chip-horario py-1 px-2 text-start';
+    }
+  });
+
+  if (indicesSeleccionados.length > 0) {
+    const primerSlot = slotsDisponibles[indicesSeleccionados[0]];
+    const ultimoSlot = slotsDisponibles[indicesSeleccionados[indicesSeleccionados.length - 1]];
+
+    inputInicio.value = primerSlot.hora_inicio;
+    inputFin.value = ultimoSlot.hora_fin;
+
+    const horasTotales = indicesSeleccionados.length;
+    cajaResumen.classList.remove('d-none');
+    txtResumen.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${formatHora12(primerSlot.hora_inicio)} a ${formatHora12(ultimoSlot.hora_fin)}`;
+    txtDuracion.textContent = horasTotales === 1 
+      ? '1 hora seleccionada (solo un tiempo)' 
+      : `${horasTotales} horas seleccionadas (varios tiempos continuos)`;
+  } else {
+    inputInicio.value = '';
+    inputFin.value = '';
+    cajaResumen.classList.add('d-none');
   }
 }
 
@@ -232,6 +432,12 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
   const inputHoraFin = document.getElementById('inputHoraFin');
   const hoy = obtenerFechaHoy();
   const horaActual = obtenerHoraActual();
+
+  if (!inputHoraInicio.value || !inputHoraFin.value) {
+    e.preventDefault();
+    alert('Debes seleccionar al menos un horario disponible en el Paso #2 antes de continuar.');
+    return;
+  }
 
   if (inputFecha.value < hoy) {
     e.preventDefault();
@@ -256,8 +462,9 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
 document.addEventListener('DOMContentLoaded', () => {
   const inputFecha = document.getElementById('inputFecha');
   const hoy = obtenerFechaHoy();
-  inputFecha.min = hoy; // Impedir seleccionar fechas pasadas en el calendario del navegador
+  inputFecha.min = hoy;
   actualizarDetallesInstalacion();
+  cargarHorariosDisponibles();
 });
 </script>
 

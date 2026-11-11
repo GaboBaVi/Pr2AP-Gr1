@@ -66,7 +66,11 @@ CREATE TABLE IF NOT EXISTS instalaciones (
     hora_apertura TIME NOT NULL DEFAULT '08:00',
     hora_cierre TIME NOT NULL DEFAULT '20:00',
     bloqueada_mantenimiento BOOLEAN DEFAULT FALSE,
-    motivo_bloqueo TEXT
+    motivo_bloqueo TEXT,
+    mantenimiento_tipo VARCHAR(20) DEFAULT 'todo_el_dia',
+    mantenimiento_hora_inicio TIME,
+    mantenimiento_hora_fin TIME,
+    mantenimiento_fecha DATE
 );
 
 -- 6. TABLA: SERVICIOS ADICIONALES POR INSTALACION

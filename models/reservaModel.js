@@ -64,11 +64,29 @@ const Reserva = {
 
     // 1. Verificar si la instalación está bloqueada por mantenimiento
     const inst = await db.query('SELECT * FROM instalaciones WHERE id = $1', [instalacionId]);
-    if (!inst.rows[0] || inst.rows[0].bloqueada_mantenimiento) {
-      return { 
-        disponible: false, 
-        motivo: `La instalación ${inst.rows[0]?.nombre || ''} está bloqueada por mantenimiento o evento privado.` 
-      };
+    if (!inst.rows[0]) {
+      return { disponible: false, motivo: 'Instalación no encontrada.' };
+    }
+    const instData = inst.rows[0];
+    if (instData.bloqueada_mantenimiento) {
+      if (instData.mantenimiento_tipo === 'horas' && instData.mantenimiento_hora_inicio && instData.mantenimiento_hora_fin) {
+        const mInicioMin = horaEnMinutos(instData.mantenimiento_hora_inicio);
+        const mFinMin = horaEnMinutos(instData.mantenimiento_hora_fin);
+        const fechaInstStr = instData.mantenimiento_fecha ? new Date(instData.mantenimiento_fecha).toISOString().split('T')[0] : null;
+        if (!fechaInstStr || fechaInstStr === fecha) {
+          if (minutosInicio < mFinMin && minutosFin > mInicioMin) {
+            return {
+              disponible: false,
+              motivo: `La instalación ${instData.nombre} se encuentra en mantenimiento en el horario de ${instData.mantenimiento_hora_inicio.slice(0,5)} a ${instData.mantenimiento_hora_fin.slice(0,5)}.`
+            };
+          }
+        }
+      } else {
+        return { 
+          disponible: false, 
+          motivo: `La instalación ${instData.nombre} está bloqueada por mantenimiento durante todo el día.` 
+        };
+      }
     }
 
     const aperturaMin = horaEnMinutos(inst.rows[0].hora_apertura);
