@@ -6,8 +6,9 @@
       <h2 class="text-center fw-bold mb-4">Registro</h2>
 
       <% if (error) { %>
-        <div class="alert alert-danger py-2 small" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show py-2 small" role="alert">
           <%= error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% } %>
 
@@ -16,13 +17,13 @@
           <input type="text" name="nombre_completo" class="form-control form-control-custom" placeholder="Nombre Completo" required>
         </div>
         <div class="mb-3">
-          <input type="text" name="cedula" class="form-control form-control-custom" placeholder="Cédula" required>
+          <input type="text" name="cedula" class="form-control form-control-custom" placeholder="Cédula (ej. 1-1234-0567 o 9 dígitos)" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$" title="Formato costarricense: 9 dígitos (ej. 1-1234-0567 o 112340567)" required>
         </div>
         <div class="mb-3">
           <input type="email" name="correo" class="form-control form-control-custom" placeholder="Correo Electrónico" required>
         </div>
         <div class="mb-3">
-          <input type="tel" name="telefono" class="form-control form-control-custom" placeholder="Número de Teléfono" required>
+          <input type="tel" name="telefono" class="form-control form-control-custom" placeholder="Teléfono (ej. 8888-8888 o 8 dígitos)" pattern="^(?:\+?506[- ]?)?[2-8]\d{3}[- ]?\d{4}$" title="Número costarricense de 8 dígitos (ej. 8888-8888 o 2222-2222)" required>
         </div>
         <div class="mb-3">
           <input type="text" name="direccion" class="form-control form-control-custom" placeholder="Dirección" required>
@@ -32,7 +33,7 @@
           <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" required>
         </div>
         <div class="mb-4">
-          <input type="password" name="password" class="form-control form-control-custom" placeholder="Contraseña" required minlength="6">
+          <input type="password" name="password" class="form-control form-control-custom" placeholder="Contraseña (mínimo 6 caracteres)" required minlength="6">
         </div>
 
         <div class="text-center mb-3">

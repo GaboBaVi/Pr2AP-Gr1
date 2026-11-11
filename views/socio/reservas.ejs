@@ -3,16 +3,18 @@
 <div class="row g-4 my-3">
   <% if (mensaje) { %>
     <div class="col-12">
-      <div class="alert alert-success py-2 small" role="alert">
+      <div class="alert alert-success alert-dismissible fade show py-2 small" role="alert">
         <%= mensaje %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     </div>
   <% } %>
 
   <% if (error) { %>
     <div class="col-12">
-      <div class="alert alert-danger py-2 small" role="alert">
+      <div class="alert alert-danger alert-dismissible fade show py-2 small" role="alert">
         <%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     </div>
   <% } %>
@@ -49,10 +51,19 @@
                   <strong>Fecha:</strong> <%= new Date(r.fecha).toLocaleDateString() %> | 
                   <strong>Horario:</strong> <%= r.hora_inicio.slice(0,5) %> - <%= r.hora_fin.slice(0,5) %>
                 </p>
-                <p class="small text-muted mb-0">
+                <p class="small text-muted mb-1">
                   <strong>Personas:</strong> <%= r.num_personas %> | 
                   <strong>Servicios Adicionales:</strong> CRC <%= Number(r.costo_servicios || 0).toLocaleString() %>
                 </p>
+                <!-- INVITADOS ASOCIADOS -->
+                <% if (r.lista_invitados && r.lista_invitados.length > 0 && r.lista_invitados[0].nombre) { %>
+                  <p class="small text-muted mb-0">
+                    <strong>Invitados:</strong> 
+                    <% r.lista_invitados.forEach(inv => { %>
+                      <span class="badge bg-light text-dark border me-1"><%= inv.nombre %> (<%= inv.cedula %>)</span>
+                    <% }) %>
+                  </p>
+                <% } %>
               </div>
               <% if (estadoActual === 'activa') { %>
                 <div class="d-flex gap-2 align-items-center">

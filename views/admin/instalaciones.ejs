@@ -4,52 +4,68 @@
   <div class="col-12">
     <div class="custom-card p-4">
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h4 class="fw-bold mb-0">Gestión de Instalaciones y Calendario</h4>
-        <!-- SELECTOR DE DIAS DE LA SEMANA -->
-        <div class="btn-group btn-group-sm" role="group">
-          <% ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].forEach(dia => { %>
-            <a href="/admin/instalaciones?dia=<%= dia %>" class="btn <%= diaSeleccionado === dia ? 'btn-dark' : 'btn-outline-secondary' %>">
-              <%= dia %>
-            </a>
-          <% }) %>
+        <div>
+          <h4 class="fw-bold mb-1">Gestión de Instalaciones y Calendario</h4>
+          <span class="text-muted small">Ocupación real calculada según reservas activas y control de mantenimiento</span>
         </div>
+        
+        <!-- SELECTOR DE FECHA REAL -->
+        <form action="/admin/instalaciones" method="GET" class="d-flex gap-2 align-items-center">
+          <label class="small text-muted mb-0 fw-bold">Fecha:</label>
+          <input type="date" name="fecha" value="<%= fecha %>" class="form-control form-control-custom form-control-sm" onchange="this.form.submit()">
+        </form>
       </div>
 
       <% if (mensaje) { %>
-        <div class="alert alert-info py-2 small mb-3">
+        <div class="alert alert-info alert-dismissible fade show py-2 small mb-3" role="alert">
           <%= mensaje %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% } %>
 
+      <!-- TABLA EXACTA DE 5 COLUMNAS: HORARIO + 4 INSTALACIONES -->
       <div class="table-responsive">
         <table class="table table-bordered text-center align-middle small">
           <thead class="table-light">
             <tr>
-              <th style="width: 15%;">Horario</th>
-              <th>Cancha de Golf</th>
-              <th>Cancha de Tenis</th>
-              <th>Piscina</th>
-              <th>Salón de Eventos</th>
+              <th style="width: 20%;">Horario</th>
+              <% instalaciones.forEach(inst => { %>
+                <th style="width: 20%;">
+                  <%= inst.nombre %><br>
+                  <small class="text-muted font-monospace">(Aforo: <%= inst.aforo_maximo %>)</small>
+                </th>
+              <% }) %>
             </tr>
           </thead>
           <tbody>
-            <% const franjas = ['8:00am - 9:00am', '9:00am - 10:00am', '10:00am - 11:00am', '11:00am - 12:00pm', '12:00pm - 1:00pm', '1:00pm - 2:00pm', '2:00pm - 3:00pm', '3:00pm - 4:00pm', '4:00pm - 5:00pm', '5:00pm - 6:00pm', '7:00pm - 8:00pm']; %>
-            <% franjas.forEach((franja, idx) => { %>
+            <% matriz.forEach(fila => { %>
               <tr>
-                <td class="fw-bold bg-light"><%= franja %></td>
-                <td><span class="badge bg-<%= idx % 2 === 0 ? 'success' : 'secondary' %>"><%= idx % 2 === 0 ? '50%' : '0%' %></span></td>
-                <td><span class="badge bg-<%= idx < 7 ? 'danger' : 'secondary' %>"><%= idx < 7 ? '100%' : '0%' %></span></td>
-                <td><span class="badge bg-<%= idx % 3 === 0 ? 'warning text-dark' : 'success' %>"><%= idx % 3 === 0 ? '80%' : '20%' %></span></td>
-                <td><span class="badge bg-<%= idx > 3 ? 'danger' : 'secondary' %>"><%= idx > 3 ? '100%' : '0%' %></span></td>
+                <td class="fw-bold bg-light text-start ps-3"><%= fila.horario %></td>
+                <% instalaciones.forEach(inst => { %>
+                  <% const celda = fila.instalaciones[inst.id] || { porcentaje: 0, personas: 0, bloqueada: false }; %>
+                  <td>
+                    <% if (celda.bloqueada) { %>
+                      <span class="badge bg-danger py-1 px-2">MANTENIMIENTO</span>
+                    <% } else if (celda.porcentaje === 0) { %>
+                      <span class="badge bg-secondary py-1 px-2">0% (Libre)</span>
+                    <% } else if (celda.porcentaje >= 100) { %>
+                      <span class="badge bg-danger py-1 px-2">100% (Lleno)</span>
+                    <% } else { %>
+                      <span class="badge bg-success py-1 px-2"><%= celda.porcentaje %>% (<%= celda.personas %> p.)</span>
+                    <% } %>
+                  </td>
+                <% }) %>
               </tr>
             <% }) %>
+
+            <!-- FILA DE CONTROL DE MANTENIMIENTO -->
             <tr class="table-secondary fw-bold">
-              <td>Mantenimiento</td>
+              <td class="text-start ps-3">Control de Mantenimiento</td>
               <% instalaciones.forEach(inst => { %>
                 <td>
-                  <form action="/admin/instalaciones/bloquear" method="POST">
+                  <form action="/admin/instalaciones/bloquear" method="POST" onsubmit="return confirm('¿Confirmar cambio de estado de mantenimiento para <%= inst.nombre %>?');">
                     <input type="hidden" name="id" value="<%= inst.id %>">
-                    <button type="submit" class="btn btn-sm <%= inst.bloqueada_mantenimiento ? 'btn-danger' : 'btn-outline-dark' %> py-1 px-2" style="font-size: 0.75rem;">
+                    <button type="submit" class="btn btn-sm <%= inst.bloqueada_mantenimiento ? 'btn-danger' : 'btn-outline-dark' %> py-1 px-2 w-100" style="font-size: 0.75rem; border-radius: 6px;">
                       <%= inst.bloqueada_mantenimiento ? 'Desbloquear' : 'Bloquear Mantenimiento' %>
                     </button>
                   </form>

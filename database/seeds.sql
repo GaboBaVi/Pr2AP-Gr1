@@ -30,7 +30,9 @@ VALUES
     ('reserva_cancelada', 'Plantilla Cancelacion de Reserva', 'Cancelacion de Reserva', 'Estimado(a) {{nombre}}, tu reserva para la fecha {{fecha}} ha sido cancelada.'),
     ('estado_cuenta', 'Plantilla Nuevo Estado de Cuenta', 'Nuevo Estado de Cuenta Disponible', 'Estimado(a) {{nombre}}, se ha generado tu estado de cuenta para el periodo {{periodo}} con un saldo de {{monto}}. Fecha limite: {{fecha_limite}}.'),
     ('recordatorio_pago', 'Plantilla Recordatorio de Pago', 'Aviso de Pago Pendiente - Club Valle Alto', 'Estimado(a) {{nombre}}, te recordamos que tienes un pago pendiente por monto de {{monto}} que vence el {{fecha_limite}}.'),
-    ('cuenta_desactivada', 'Plantilla Cuenta Desactivada', 'Notificacion sobre el estado de tu cuenta', 'Estimado(a) {{nombre}}, te informamos que tu cuenta ha cambiado de estado en el Club Valle Alto. Para mas detalles contacta a administracion.')
+    ('cuenta_desactivada', 'Plantilla Cuenta Desactivada', 'Notificacion sobre el estado de tu cuenta', 'Estimado(a) {{nombre}}, te informamos que tu cuenta ha cambiado de estado en el Club Valle Alto. Para mas detalles contacta a administracion.'),
+    ('mantenimiento_cancelacion', 'Plantilla Cancelación por Mantenimiento', 'Aviso Importante: Cancelación de Reserva por Mantenimiento - Club Valle Alto', 'Estimado(a) {{nombre}}, le informamos que debido a mantenimiento o evento privado en la instalación {{instalacion}}, su reserva para el día {{fecha}} ha sido cancelada. Cualquier cargo adicional asociado fue anulado de su estado de cuenta.'),
+    ('mantenimiento_restablecido', 'Plantilla Instalación Restablecida', 'Instalación Disponible Nuevamente - Club Valle Alto', 'Estimado(a) {{nombre}}, le informamos que la instalación {{instalacion}} ha finalizado su mantenimiento y ya está disponible para reservas.')
 ON CONFLICT (clave) DO NOTHING;
 
 -- 4. Usuarios de prueba (Password para ambos: password123)

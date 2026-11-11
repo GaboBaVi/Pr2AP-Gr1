@@ -3,15 +3,19 @@
 <div class="row justify-content-center my-3">
   <div class="col-lg-11">
     <div class="custom-card p-4 p-md-5">
-      <h3 class="fw-bold mb-4 text-center">Formulario de Reservas e Invitados</h3>
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h3 class="fw-bold mb-0">Formulario de Reservas e Invitados</h3>
+        <a href="/socio/reservas" class="btn btn-sm btn-outline-secondary rounded-pill">Volver</a>
+      </div>
 
       <% if (error) { %>
-        <div class="alert alert-danger py-2 small mb-4" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show py-2 small mb-4" role="alert">
           <%= error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% } %>
 
-      <form action="/socio/reservar" method="POST">
+      <form action="/socio/reservar" method="POST" id="formReserva">
         <div class="row g-4">
           <!-- PASO 1: SELECCION DE INSTALACION -->
           <div class="col-md-3">
@@ -19,18 +23,26 @@
               <span class="badge bg-secondary mb-2">Paso #1</span>
               <h6 class="fw-bold mb-3">Selección de la Instalación</h6>
               <div class="mb-3">
-                <select name="instalacion_id" class="form-select form-control-custom" required>
-                  <option value="" disabled selected>Selecciona instalación...</option>
+                <select name="instalacion_id" id="selectInstalacion" class="form-select form-control-custom" required onchange="actualizarDetallesInstalacion()">
+                  <option value="" disabled <%= !datosPrevios.instalacion_id ? 'selected' : '' %>>Selecciona instalación...</option>
                   <% instalaciones.forEach(inst => { %>
-                    <option value="<%= inst.id %>" <%= inst.bloqueada_mantenimiento ? 'disabled' : '' %>>
-                      <%= inst.nombre %> <%= inst.bloqueada_mantenimiento ? '(Bloqueada)' : '' %>
+                    <option value="<%= inst.id %>" 
+                            data-aforo="<%= inst.aforo_maximo %>" 
+                            data-apertura="<%= inst.hora_apertura.slice(0,5) %>" 
+                            data-cierre="<%= inst.hora_cierre.slice(0,5) %>"
+                            <%= String(datosPrevios.instalacion_id) === String(inst.id) ? 'selected' : '' %>
+                            <%= inst.bloqueada_mantenimiento ? 'disabled' : '' %>>
+                      <%= inst.nombre %> <%= inst.bloqueada_mantenimiento ? '(Bloqueada por Mantenimiento)' : '' %>
                     </option>
                   <% }) %>
                 </select>
               </div>
-              <small class="text-muted d-block mt-2">
-                El sistema valida automáticamente que no existan traslapes ni mantenimientos programados.
-              </small>
+
+              <!-- BANNER DINAMICO DE DETALLES DE LA INSTALACION -->
+              <div id="infoInstalacion" class="alert alert-info py-2 small d-none mb-0">
+                <strong>Aforo Máximo:</strong> <span id="txtAforo">-</span> personas<br>
+                <strong>Horario:</strong> <span id="txtHorario">-</span>
+              </div>
             </div>
           </div>
 
@@ -41,53 +53,70 @@
               <h6 class="fw-bold mb-3">Indicar Fecha, Hora y Aforo</h6>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0">Fecha de Reserva</label>
-                <input type="date" name="fecha" class="form-control form-control-custom" required>
+                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required>
               </div>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0">Hora de Inicio</label>
-                <input type="time" name="hora_inicio" class="form-control form-control-custom" required>
+                <input type="time" name="hora_inicio" id="inputHoraInicio" class="form-control form-control-custom" value="<%= datosPrevios.hora_inicio || '' %>" required>
               </div>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0">Hora de Fin</label>
-                <input type="time" name="hora_fin" class="form-control form-control-custom" required>
+                <input type="time" name="hora_fin" id="inputHoraFin" class="form-control form-control-custom" value="<%= datosPrevios.hora_fin || '' %>" required>
               </div>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0">Número de Personas</label>
-                <input type="number" name="num_personas" min="1" max="100" class="form-control form-control-custom" required>
+                <input type="number" name="num_personas" id="inputNumPersonas" min="1" max="100" class="form-control form-control-custom" value="<%= datosPrevios.num_personas || 1 %>" required>
               </div>
             </div>
           </div>
 
-          <!-- PASO 3: SERVICIOS ADICIONALES -->
+          <!-- PASO 3: SERVICIOS ADICIONALES (FILTRADOS POR INSTALACION) -->
           <div class="col-md-3">
             <div class="border rounded-4 p-3 bg-white h-100">
               <span class="badge bg-secondary mb-2">Paso #3</span>
               <h6 class="fw-bold mb-2">Servicios Adicionales</h6>
-              <p class="small text-muted mb-3">(Opcionales)</p>
+              <p class="small text-muted mb-3">Opciones según instalación</p>
               
-              <div class="form-check mb-2 small">
-                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="palos_golf" id="s1">
-                <label class="form-check-label" for="s1">Alquiler de Palos de Golf</label>
+              <div id="sinServicios" class="text-muted small">Selecciona una instalación para ver los servicios disponibles.</div>
+
+              <!-- GOLF (ID 1) -->
+              <div class="servicio-item d-none" data-inst="1">
+                <div class="form-check mb-2 small">
+                  <input class="form-check-input check-servicio" type="checkbox" name="servicios_adicionales" value="palos_golf" id="s1">
+                  <label class="form-check-label" for="s1">Palos de Golf (CRC 15,000)</label>
+                </div>
+                <div class="form-check mb-2 small">
+                  <input class="form-check-input check-servicio" type="checkbox" name="servicios_adicionales" value="pelotas_golf" id="s2">
+                  <label class="form-check-label" for="s2">Pelotas Golf (CRC 5,000)</label>
+                </div>
               </div>
-              <div class="form-check mb-2 small">
-                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="pelotas_golf" id="s2">
-                <label class="form-check-label" for="s2">Alquiler de Pelotas de Golf</label>
+
+              <!-- TENIS (ID 2) -->
+              <div class="servicio-item d-none" data-inst="2">
+                <div class="form-check mb-2 small">
+                  <input class="form-check-input check-servicio" type="checkbox" name="servicios_adicionales" value="raquetas" id="s3">
+                  <label class="form-check-label" for="s3">Raquetas Tenis (CRC 6,000)</label>
+                </div>
+                <div class="form-check mb-2 small">
+                  <input class="form-check-input check-servicio" type="checkbox" name="servicios_adicionales" value="pelotas_tenis" id="s4">
+                  <label class="form-check-label" for="s4">Pelotas Tenis (CRC 3,000)</label>
+                </div>
               </div>
-              <div class="form-check mb-2 small">
-                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="raquetas" id="s3">
-                <label class="form-check-label" for="s3">Alquiler de Raquetas Tenis</label>
+
+              <!-- PISCINA (ID 3) -->
+              <div class="servicio-item d-none" data-inst="3">
+                <div class="form-check mb-2 small">
+                  <input class="form-check-input check-servicio" type="checkbox" name="servicios_adicionales" value="piscina" id="s5">
+                  <label class="form-check-label" for="s5">Accesorios Piscina (CRC 2,500)</label>
+                </div>
               </div>
-              <div class="form-check mb-2 small">
-                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="pelotas_tenis" id="s4">
-                <label class="form-check-label" for="s4">Alquiler de Pelotas Tenis</label>
-              </div>
-              <div class="form-check mb-2 small">
-                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="piscina" id="s5">
-                <label class="form-check-label" for="s5">Accesorios para Piscina</label>
-              </div>
-              <div class="form-check mb-3 small">
-                <input class="form-check-input" type="checkbox" name="servicios_adicionales" value="mobiliario" id="s6">
-                <label class="form-check-label" for="s6">Montaje de Mobiliario</label>
+
+              <!-- SALON (ID 4) -->
+              <div class="servicio-item d-none" data-inst="4">
+                <div class="form-check mb-2 small">
+                  <input class="form-check-input check-servicio" type="checkbox" name="servicios_adicionales" value="mobiliario" id="s6">
+                  <label class="form-check-label" for="s6">Mobiliario & Sonido (CRC 45,000)</label>
+                </div>
               </div>
             </div>
           </div>
@@ -97,30 +126,80 @@
             <div class="border rounded-4 p-3 bg-white h-100">
               <span class="badge bg-secondary mb-2">Paso #4</span>
               <h6 class="fw-bold mb-2">Registro de Invitado</h6>
-              <p class="small text-muted mb-3">(Si asiste con acompañante)</p>
+              <p class="small text-muted mb-3">(Acompañante externo)</p>
 
               <div class="mb-2">
-                <input type="text" name="invitado_nombre" class="form-control form-control-custom" placeholder="Nombre acompañante">
+                <input type="text" name="invitado_nombre" class="form-control form-control-custom" placeholder="Nombre acompañante" value="<%= datosPrevios.invitado_nombre || '' %>">
               </div>
               <div class="mb-2">
-                <input type="text" name="invitado_cedula" class="form-control form-control-custom" placeholder="Cédula acompañante">
+                <input type="text" name="invitado_cedula" class="form-control form-control-custom" placeholder="Cédula (ej. 1-1234-0567)" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})?$" title="Formato: 9 dígitos costarricense" value="<%= datosPrevios.invitado_cedula || '' %>">
               </div>
               <div class="mb-3">
-                <input type="text" name="invitado_parentesco" class="form-control form-control-custom" placeholder="Parentesco / Relación">
+                <input type="text" name="invitado_parentesco" class="form-control form-control-custom" placeholder="Parentesco o Relación" value="<%= datosPrevios.invitado_parentesco || '' %>">
               </div>
               <small class="text-muted d-block mb-3">
-                El sistema valida el límite mensual de invitados según tu membresía.
+                Los invitados registrados aparecerán en el detalle de la reserva y en la lista de recepción para control de acceso.
               </small>
             </div>
           </div>
         </div>
 
-        <div class="text-center mt-4">
+        <div class="text-center mt-5">
           <button type="submit" class="btn-dark-pill px-5 py-2">Confirmar Reserva</button>
         </div>
       </form>
     </div>
   </div>
 </div>
+
+<script>
+function actualizarDetallesInstalacion() {
+  const select = document.getElementById('selectInstalacion');
+  const selectedOption = select.options[select.selectedIndex];
+  const infoBox = document.getElementById('infoInstalacion');
+  const sinServicios = document.getElementById('sinServicios');
+
+  if (selectedOption && selectedOption.value) {
+    const aforo = selectedOption.getAttribute('data-aforo');
+    const apertura = selectedOption.getAttribute('data-apertura');
+    const cierre = selectedOption.getAttribute('data-cierre');
+
+    document.getElementById('txtAforo').innerText = aforo;
+    document.getElementById('txtHorario').innerText = `${apertura} a ${cierre}`;
+    infoBox.classList.remove('d-none');
+
+    // Ajustar max del input personas
+    const inputPersonas = document.getElementById('inputNumPersonas');
+    inputPersonas.max = aforo;
+
+    // Ajustar min/max horas
+    document.getElementById('inputHoraInicio').min = apertura;
+    document.getElementById('inputHoraInicio').max = cierre;
+    document.getElementById('inputHoraFin').min = apertura;
+    document.getElementById('inputHoraFin').max = cierre;
+
+    // Mostrar solo servicios de esta instalacion
+    const instId = selectedOption.value;
+    sinServicios.classList.add('d-none');
+    document.querySelectorAll('.servicio-item').forEach(div => {
+      if (div.getAttribute('data-inst') === instId) {
+        div.classList.remove('d-none');
+      } else {
+        div.classList.add('d-none');
+        // Desmarcar checkboxes ocultos
+        div.querySelectorAll('.check-servicio').forEach(chk => chk.checked = false);
+      }
+    });
+  } else {
+    infoBox.classList.add('d-none');
+    sinServicios.classList.remove('d-none');
+  }
+}
+
+// Ejecutar al cargar por si habian datos previos
+document.addEventListener('DOMContentLoaded', () => {
+  actualizarDetallesInstalacion();
+});
+</script>
 
 <%- include('../layouts/footer') %>

@@ -76,6 +76,20 @@ const Cobro = {
         [usuarioId, monto]
       );
     }
+  },
+
+  async descontarCargosServicio(usuarioId, monto) {
+    if (!monto || monto <= 0) return;
+    const actual = await this.obtenerEstadoActual(usuarioId);
+    if (actual && actual.estado === 'pendiente') {
+      await db.query(
+        `UPDATE estados_cuenta 
+         SET cargos_servicios = GREATEST(0, cargos_servicios - $1),
+             total_pagar = GREATEST(cuota_membresia, total_pagar - $1)
+         WHERE id = $2`,
+        [monto, actual.id]
+      );
+    }
   }
 };
 

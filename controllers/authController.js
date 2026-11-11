@@ -68,6 +68,18 @@ const authController = {
   async postRegister(req, res) {
     const { nombre_completo, cedula, correo, telefono, direccion, fecha_nacimiento, password } = req.body;
     try {
+      // Validar formato de cédula costarricense
+      const regexCedula = /^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$/;
+      if (!regexCedula.test(cedula.trim())) {
+        return res.render('auth/register', { error: 'El formato de cédula ingresado no es válido (ej. 1-1234-0567 o 9 dígitos).' });
+      }
+
+      // Validar formato de teléfono costarricense
+      const regexTelefono = /^(?:\+?506[- ]?)?[2-8]\d{3}[- ]?\d{4}$/;
+      if (!regexTelefono.test(telefono.trim())) {
+        return res.render('auth/register', { error: 'El formato de teléfono debe ser de 8 dígitos costarricense (ej. 8888-8888).' });
+      }
+
       const existe = await Usuario.buscarPorCorreo(correo);
       if (existe) {
         return res.render('auth/register', { error: 'El correo electrónico ya se encuentra registrado.' });

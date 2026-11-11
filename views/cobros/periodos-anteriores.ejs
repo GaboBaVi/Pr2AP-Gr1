@@ -5,23 +5,23 @@
     <div class="custom-card p-4">
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h4 class="fw-bold mb-0">Historial de Periodos Anteriores</h4>
-        <div class="d-flex gap-2">
-          <input type="text" class="form-control form-control-custom form-control-sm" placeholder="Buscar mes o periodo..." id="busquedaHistorial">
-          <a href="/socio/estado-cuenta" class="btn btn-sm btn-outline-secondary rounded-pill">Volver</a>
+        <div class="d-flex gap-2 align-items-center">
+          <input type="text" class="form-control form-control-custom" style="width: 250px;" placeholder="Buscar mes o periodo..." id="busquedaHistorial" onkeyup="filtrarHistorial()">
+          <a href="/socio/estado-cuenta" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center" style="height: 38px; border-radius: 8px; padding: 0 1.2rem;">Volver</a>
         </div>
       </div>
 
       <div class="table-responsive">
-        <table class="table table-hover align-middle">
+        <table class="table table-hover align-middle" id="tablaHistorial">
           <thead class="table-light">
             <tr>
               <th>Periodo / Mes</th>
               <th>Fecha de Pago</th>
               <th>Cuota Membresía</th>
               <th>Servicios Adicionales</th>
-              <th>Total Pagado</th>
+              <th>Total Facturado</th>
               <th>Estado</th>
-              <th class="text-end">Acción</th>
+              <th class="text-end">Comprobante</th>
             </tr>
           </thead>
           <tbody>
@@ -44,33 +44,8 @@
                 </tr>
               <% }) %>
             <% } else { %>
-              <!-- Fila estatica de muestra coincidente con el prototipo -->
               <tr>
-                <td class="fw-bold">Septiembre 2026</td>
-                <td>28/09/2026</td>
-                <td>CRC 35,000</td>
-                <td>CRC 5,000</td>
-                <td class="fw-bold">CRC 40,000</td>
-                <td><span class="badge bg-success">PAGADO</span></td>
-                <td class="text-end"><a href="/socio/descargar-pdf/1" class="btn-dark-pill btn-sm-pill">Descargar PDF</a></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Agosto 2026</td>
-                <td>29/08/2026</td>
-                <td>CRC 35,000</td>
-                <td>CRC 15,000</td>
-                <td class="fw-bold">CRC 50,000</td>
-                <td><span class="badge bg-success">PAGADO</span></td>
-                <td class="text-end"><a href="/socio/descargar-pdf/1" class="btn-dark-pill btn-sm-pill">Descargar PDF</a></td>
-              </tr>
-              <tr>
-                <td class="fw-bold">Julio 2026</td>
-                <td>30/07/2026</td>
-                <td>CRC 35,000</td>
-                <td>CRC 0</td>
-                <td class="fw-bold">CRC 35,000</td>
-                <td><span class="badge bg-success">PAGADO</span></td>
-                <td class="text-end"><a href="/socio/descargar-pdf/1" class="btn-dark-pill btn-sm-pill">Descargar PDF</a></td>
+                <td colspan="7" class="text-center text-muted py-4">No tienes periodos registrados en el historial todavía.</td>
               </tr>
             <% } %>
           </tbody>
@@ -79,5 +54,16 @@
     </div>
   </div>
 </div>
+
+<script>
+function filtrarHistorial() {
+  const query = document.getElementById('busquedaHistorial').value.toLowerCase();
+  const rows = document.querySelectorAll('#tablaHistorial tbody tr');
+  rows.forEach(r => {
+    const text = r.innerText.toLowerCase();
+    r.style.display = text.includes(query) ? '' : 'none';
+  });
+}
+</script>
 
 <%- include('../layouts/footer') %>

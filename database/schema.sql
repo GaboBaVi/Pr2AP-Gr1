@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS beneficiarios (
 -- 5. TABLA: INSTALACIONES
 CREATE TABLE IF NOT EXISTS instalaciones (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL, -- 'Cancha de Golf', 'Cancha de Tenis', 'Piscina', 'Salon de Eventos'
+    nombre VARCHAR(100) UNIQUE NOT NULL, -- 'Cancha de Golf', 'Cancha de Tenis', 'Piscina', 'Salon de Eventos'
     descripcion TEXT,
     aforo_maximo INT NOT NULL,
     hora_apertura TIME NOT NULL DEFAULT '08:00',

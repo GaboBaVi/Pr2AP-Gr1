@@ -1,5 +1,12 @@
 const db = require('../config/db');
 
+// Función auxiliar para comparar horas sin importar si traen segundos o no
+function horaEnMinutos(h) {
+  if (!h) return 0;
+  const parts = h.slice(0, 5).split(':').map(Number);
+  return parts[0] * 60 + parts[1];
+}
+
 const Reserva = {
   async obtenerPorId(id) {
     const res = await db.query(
@@ -14,7 +21,9 @@ const Reserva = {
 
   async listarPorUsuario(usuarioId, estado = null) {
     let sql = `
-      SELECT r.*, i.nombre as nombre_instalacion
+      SELECT r.*, i.nombre as nombre_instalacion,
+             (SELECT json_agg(json_build_object('nombre', inv.nombre_completo, 'cedula', inv.cedula))
+              FROM invitados inv WHERE inv.reserva_id = r.id) as lista_invitados
       FROM reservas r
       JOIN instalaciones i ON r.instalacion_id = i.id
       WHERE r.usuario_id = $1
@@ -39,17 +48,20 @@ const Reserva = {
       };
     }
 
-    // 2. Horarios de apertura y cierre
-    const apertura = inst.rows[0].hora_apertura;
-    const cierre = inst.rows[0].hora_cierre;
-    if (horaInicio < apertura || horaFin > cierre) {
+    const minutosInicio = horaEnMinutos(horaInicio);
+    const minutosFin = horaEnMinutos(horaFin);
+    const aperturaMin = horaEnMinutos(inst.rows[0].hora_apertura);
+    const cierreMin = horaEnMinutos(inst.rows[0].hora_cierre);
+
+    // 2. Horarios de apertura y cierre (Permisivo e inclusivo: inicio >= apertura && fin <= cierre)
+    if (minutosInicio < aperturaMin || minutosFin > cierreMin) {
       return { 
         disponible: false, 
-        motivo: `El horario solicitado debe encontrarse entre ${apertura} y ${cierre}.` 
+        motivo: `El horario solicitado debe encontrarse entre ${inst.rows[0].hora_apertura.slice(0,5)} y ${inst.rows[0].hora_cierre.slice(0,5)}.` 
       };
     }
 
-    if (horaInicio >= horaFin) {
+    if (minutosInicio >= minutosFin) {
       return {
         disponible: false,
         motivo: 'La hora de inicio debe ser anterior a la hora de finalización.'
@@ -76,7 +88,7 @@ const Reserva = {
     if (traslapes.rows.length > 0) {
       return { 
         disponible: false, 
-        motivo: 'Conflicto de horario: Ya existe una reserva confirmada en la franja solicitada.' 
+        motivo: 'Conflicto de horario: Ya existe una reserva confirmada en la franja horaria solicitada.' 
       };
     }
 
@@ -113,14 +125,6 @@ const Reserva = {
       [id, usuarioId]
     );
     return res.rows[0];
-  },
-
-  async obtenerServiciosDisponibles(instalacionId) {
-    const res = await db.query(
-      'SELECT * FROM servicios_adicionales_disponibles WHERE instalacion_id = $1 ORDER BY id ASC',
-      [instalacionId]
-    );
-    return res.rows;
   },
 
   async limpiarServiciosSeleccionados(reservaId) {

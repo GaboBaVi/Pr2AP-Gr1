@@ -8,29 +8,32 @@
           <h4 class="fw-bold mb-1">Control de Cobros y Morosidad</h4>
           <span class="text-muted small">Módulo para el Encargado de Cobros y Administrador General</span>
         </div>
-        <div class="d-flex gap-2">
-          <input type="text" class="form-control form-control-custom form-control-sm" placeholder="Búsqueda de usuario..." id="busquedaCobros">
-          <form action="/admin/cobros/recordatorios" method="POST">
-            <button type="submit" class="btn-dark-pill btn-sm-pill">Enviar recordatorios de pago</button>
+        <div class="d-flex gap-2 align-items-center">
+          <input type="text" class="form-control form-control-custom" style="width: 250px;" placeholder="Buscar socio..." id="busquedaCobros" onkeyup="filtrarCobros()">
+          <form action="/admin/cobros/recordatorios" method="POST" onsubmit="return confirm('¿Enviar recordatorio de pago a todos los socios con cuotas pendientes o vencidas?');">
+            <button type="submit" class="btn-dark-pill" style="height: 38px;">Enviar recordatorios de pago</button>
           </form>
         </div>
       </div>
 
       <% if (mensaje) { %>
-        <div class="alert alert-info py-2 small mb-3">
+        <div class="alert alert-success alert-dismissible fade show py-2 small mb-3" role="alert">
           <%= mensaje %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% } %>
 
       <div class="table-responsive">
-        <table class="table table-hover align-middle small">
+        <table class="table table-hover align-middle small" id="tablaCobros">
           <thead class="table-light">
             <tr>
               <th>Días de Retraso</th>
-              <th>Nombre</th>
-              <th>Morosidad</th>
+              <th>Cédula</th>
+              <th>Nombre del Socio</th>
+              <th>Monto Adeudado</th>
+              <th>Fecha Límite</th>
               <th>Estado de Cuenta</th>
-              <th>Acción de Pago</th>
+              <th class="text-end">Acción de Pago</th>
             </tr>
           </thead>
           <tbody>
@@ -38,15 +41,17 @@
               <% morosos.forEach(m => { %>
                 <tr>
                   <td><span class="badge bg-danger"><%= m.dias_atraso %> días</span></td>
-                  <td class="fw-bold"><%= m.nombre_completo %></td>
+                  <td class="fw-bold"><%= m.cedula %></td>
+                  <td><%= m.nombre_completo %></td>
                   <td class="text-danger fw-bold">CRC <%= Number(m.total_pagar).toLocaleString() %></td>
+                  <td><%= new Date(m.fecha_limite_pago).toLocaleDateString() %></td>
                   <td>
                     <span class="badge bg-<%= m.estado === 'vencido' ? 'danger' : 'warning text-dark' %>">
                       <%= m.estado.toUpperCase() %>
                     </span>
                   </td>
-                  <td>
-                    <form action="/admin/cobros/pagar" method="POST">
+                  <td class="text-end">
+                    <form action="/admin/cobros/pagar" method="POST" onsubmit="return confirm('¿Marcar como recibido el pago de CRC <%= Number(m.total_pagar).toLocaleString() %> para <%= m.nombre_completo %>?');">
                       <input type="hidden" name="id" value="<%= m.id %>">
                       <button type="submit" class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button>
                     </form>
@@ -54,34 +59,10 @@
                 </tr>
               <% }) %>
             <% } else { %>
-              <!-- Registros de muestra coincidentes con el prototipo -->
               <tr>
-                <td><span class="badge bg-danger">32 días</span></td>
-                <td class="fw-bold">Daniel Zumbado Hidalgo</td>
-                <td class="text-danger fw-bold">CRC 200,000</td>
-                <td><span class="badge bg-success">Activa</span></td>
-                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
-              </tr>
-              <tr>
-                <td><span class="badge bg-danger">15 días</span></td>
-                <td class="fw-bold">Carlos Mora Vargas</td>
-                <td class="text-danger fw-bold">CRC 45,000</td>
-                <td><span class="badge bg-success">Activa</span></td>
-                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
-              </tr>
-              <tr>
-                <td><span class="badge bg-danger">30 días</span></td>
-                <td class="fw-bold">Valeria Castro Jiménez</td>
-                <td class="text-danger fw-bold">CRC 85,000</td>
-                <td><span class="badge bg-success">Activa</span></td>
-                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
-              </tr>
-              <tr>
-                <td><span class="badge bg-danger">90 días</span></td>
-                <td class="fw-bold">Roberto Esquivel Mata</td>
-                <td class="text-danger fw-bold">CRC 250,000</td>
-                <td><span class="badge bg-danger">Suspendida</span></td>
-                <td><button class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button></td>
+                <td colspan="7" class="text-center text-muted py-5">
+                  ¡Excelente! No hay socios con cobros vencidos o pendientes en este momento.
+                </td>
               </tr>
             <% } %>
           </tbody>
@@ -90,5 +71,16 @@
     </div>
   </div>
 </div>
+
+<script>
+function filtrarCobros() {
+  const query = document.getElementById('busquedaCobros').value.toLowerCase();
+  const rows = document.querySelectorAll('#tablaCobros tbody tr');
+  rows.forEach(r => {
+    const text = r.innerText.toLowerCase();
+    r.style.display = text.includes(query) ? '' : 'none';
+  });
+}
+</script>
 
 <%- include('../layouts/footer') %>

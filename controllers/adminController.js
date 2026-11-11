@@ -2,6 +2,8 @@ const Usuario = require('../models/usuarioModel');
 const Membresia = require('../models/membresiaModel');
 const Instalacion = require('../models/instalacionModel');
 const Invitado = require('../models/invitadoModel');
+const Notificacion = require('../models/notificacionModel');
+const Cobro = require('../models/cobroModel');
 const bcrypt = require('bcryptjs');
 const { enviarCorreo } = require('../config/mailer');
 
@@ -60,7 +62,7 @@ const adminController = {
       }
 
       await Membresia.actualizarTipoYEstado(membresia.id, tipo, estado, motivo, req.session.usuario.id);
-      req.session.mensajeAdmin = 'Membresía actualizada con registro histórico.';
+      req.session.mensajeAdmin = 'Membresía actualizada con registro en el historial.';
       res.redirect('/admin/socios');
     } catch (err) {
       console.error('Error en postActualizarMembresia:', err);
@@ -94,7 +96,7 @@ const adminController = {
         `
       });
 
-      req.session.mensajeAdmin = `Contraseña restablecida exitosamente para ${socio.nombre_completo}. Se le envió la clave temporal (${tempPassword}) a su correo.`;
+      req.session.mensajeAdmin = `Contraseña restablecida exitosamente para ${socio.nombre_completo}. Clave temporal enviada a su correo.`;
       res.redirect('/admin/socios');
     } catch (err) {
       console.error('Error en postResetPasswordSocio:', err);
@@ -107,14 +109,13 @@ const adminController = {
     const fecha = req.query.fecha || new Date().toISOString().split('T')[0];
 
     try {
-      const instalaciones = await Instalacion.listarTodas();
-      const ocupacion = await Instalacion.obtenerOcupacionPorDia(fecha);
+      const { matriz, instalaciones } = await Instalacion.obtenerMatrizCalendario(fecha);
 
       res.render('admin/instalaciones', {
         instalaciones,
+        matriz,
         diaSeleccionado,
         fecha,
-        ocupacion,
         mensaje: req.session.mensajeInstalaciones || null
       });
       delete req.session.mensajeInstalaciones;
@@ -127,8 +128,51 @@ const adminController = {
   async postToggleBloqueo(req, res) {
     const { id, motivo } = req.body;
     try {
-      await Instalacion.toggleBloqueo(id, motivo || 'Mantenimiento preventivo programado');
-      req.session.mensajeInstalaciones = 'Estado de disponibilidad de la instalación modificado.';
+      const instalacion = await Instalacion.obtenerPorId(id);
+      const nuevoEstadoBloqueo = !instalacion.bloqueada_mantenimiento;
+
+      await Instalacion.toggleBloqueo(id, motivo || 'Mantenimiento preventivo');
+
+      if (nuevoEstadoBloqueo) {
+        // Bloqueo: cancelar reservas afectadas y notificar
+        const afectadas = await Instalacion.cancelarReservasAfectadasPorBloqueo(id);
+        const plantilla = await Notificacion.obtenerPlantilla('mantenimiento_cancelacion');
+
+        for (const r of afectadas) {
+          // Descontar cobro si tenía servicios adicionales
+          if (Number(r.costo_servicios) > 0) {
+            await Cobro.descontarCargosServicio(r.usuario_id, Number(r.costo_servicios));
+          }
+
+          // Enviar correo de cancelación por mantenimiento
+          if (plantilla) {
+            const cuerpo = plantilla.cuerpo
+              .replace('{{nombre}}', r.nombre_completo)
+              .replace('{{instalacion}}', r.nombre_instalacion)
+              .replace('{{fecha}}', new Date(r.fecha).toLocaleDateString())
+              .replace('{{hora_inicio}}', r.hora_inicio.slice(0,5))
+              .replace('{{hora_fin}}', r.hora_fin.slice(0,5));
+
+            await enviarCorreo({
+              para: r.correo,
+              asunto: plantilla.asunto,
+              html: `<p>${cuerpo}</p>`
+            });
+
+            await Notificacion.registrarEnBitacora({
+              usuario_id: r.usuario_id,
+              tipo_notificacion: 'Cancelacion por Mantenimiento',
+              destinatario_correo: r.correo,
+              asunto: plantilla.asunto
+            });
+          }
+        }
+
+        req.session.mensajeInstalaciones = `La instalación "${instalacion.nombre}" fue bloqueada por mantenimiento. Se cancelaron ${afectadas.length} reservas activas y se notificó por correo a los socios afectados.`;
+      } else {
+        req.session.mensajeInstalaciones = `La instalación "${instalacion.nombre}" fue desbloqueada y ya está disponible para reservas nuevamente.`;
+      }
+
       res.redirect('/admin/instalaciones');
     } catch (err) {
       console.error('Error en postToggleBloqueo:', err);

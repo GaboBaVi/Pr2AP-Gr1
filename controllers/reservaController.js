@@ -7,12 +7,12 @@ const Cobro = require('../models/cobroModel');
 const { enviarCorreo } = require('../config/mailer');
 
 const MAPA_SERVICIOS = {
-  'palos_golf': { nombre: 'Alquiler de Palos de Golf', costo: 15000.00 },
-  'pelotas_golf': { nombre: 'Alquiler de Pelotas de Golf', costo: 5000.00 },
-  'raquetas': { nombre: 'Alquiler de Raquetas de Tenis', costo: 6000.00 },
-  'pelotas_tenis': { nombre: 'Alquiler de Pelotas de Tenis', costo: 3000.00 },
-  'piscina': { nombre: 'Accesorios para Piscina', costo: 2500.00 },
-  'mobiliario': { nombre: 'Montaje de Mobiliario y Sonido', costo: 45000.00 }
+  'palos_golf': { nombre: 'Alquiler de Palos de Golf', costo: 15000.00, instalacion_id: 1 },
+  'pelotas_golf': { nombre: 'Alquiler de Pelotas de Golf', costo: 5000.00, instalacion_id: 1 },
+  'raquetas': { nombre: 'Alquiler de Raquetas de Tenis', costo: 6000.00, instalacion_id: 2 },
+  'pelotas_tenis': { nombre: 'Alquiler de Pelotas de Tenis', costo: 3000.00, instalacion_id: 2 },
+  'piscina': { nombre: 'Accesorios para Piscina', costo: 2500.00, instalacion_id: 3 },
+  'mobiliario': { nombre: 'Montaje de Mobiliario y Sonido', costo: 45000.00, instalacion_id: 4 }
 };
 
 const reservaController = {
@@ -47,8 +47,12 @@ const reservaController = {
   async getFormularioReserva(req, res) {
     try {
       const instalaciones = await Instalacion.listarTodas();
+      const datosPrevios = req.session.datosFormReserva || {};
+      delete req.session.datosFormReserva;
+
       res.render('socio/reservar', {
         instalaciones,
+        datosPrevios,
         error: req.session.errorFormReserva || null
       });
       delete req.session.errorFormReserva;
@@ -69,28 +73,40 @@ const reservaController = {
       const check = await Reserva.verificarDisponibilidad(instalacion_id, fecha, hora_inicio, hora_fin);
       if (!check.disponible) {
         req.session.errorFormReserva = check.motivo;
+        req.session.datosFormReserva = req.body;
         return res.redirect('/socio/reservar');
       }
 
       // 2. Validar aforo
       if (parseInt(num_personas, 10) > check.instalacion.aforo_maximo) {
         req.session.errorFormReserva = `El aforo máximo permitido para ${check.instalacion.nombre} es de ${check.instalacion.aforo_maximo} personas.`;
+        req.session.datosFormReserva = req.body;
         return res.redirect('/socio/reservar');
       }
 
-      // 3. Calcular costo total de servicios adicionales
+      // 3. Validar cédula de invitado si fue provista
+      if (invitado_cedula && invitado_cedula.trim()) {
+        const regexCedula = /^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$/;
+        if (!regexCedula.test(invitado_cedula.trim())) {
+          req.session.errorFormReserva = 'La cédula del invitado no tiene un formato válido (ej. 1-1234-0567 o 9 dígitos).';
+          req.session.datosFormReserva = req.body;
+          return res.redirect('/socio/reservar');
+        }
+      }
+
+      // 4. Calcular costo total de servicios adicionales
       let totalServicios = 0;
       const serviciosArray = Array.isArray(servicios_adicionales) 
         ? servicios_adicionales 
         : (servicios_adicionales ? [servicios_adicionales] : []);
 
       serviciosArray.forEach(clave => {
-        if (MAPA_SERVICIOS[clave]) {
+        if (MAPA_SERVICIOS[clave] && String(MAPA_SERVICIOS[clave].instalacion_id) === String(instalacion_id)) {
           totalServicios += MAPA_SERVICIOS[clave].costo;
         }
       });
 
-      // 4. Crear la reserva
+      // 5. Crear la reserva
       const nuevaReserva = await Reserva.crear({
         usuario_id: req.session.usuario.id,
         instalacion_id,
@@ -101,9 +117,9 @@ const reservaController = {
         costo_servicios: totalServicios
       });
 
-      // 5. Guardar los servicios adicionales asociados
+      // 6. Guardar los servicios adicionales asociados
       for (const clave of serviciosArray) {
-        if (MAPA_SERVICIOS[clave]) {
+        if (MAPA_SERVICIOS[clave] && String(MAPA_SERVICIOS[clave].instalacion_id) === String(instalacion_id)) {
           await Reserva.agregarServicioSeleccionado(
             nuevaReserva.id, 
             null, 
@@ -113,13 +129,13 @@ const reservaController = {
         }
       }
 
-      // 6. Actualizar o sumar el costo al estado de cuenta del socio si hubo servicios
+      // 7. Actualizar el estado de cuenta del socio si hubo servicios
       if (totalServicios > 0) {
         await Cobro.agregarCargosServicio(req.session.usuario.id, totalServicios);
       }
 
-      // 7. Registrar invitado si fue ingresado (Paso #4)
-      if (invitado_cedula && invitado_nombre) {
+      // 8. Registrar invitado si fue ingresado (Paso #4)
+      if (invitado_cedula && invitado_nombre && invitado_nombre.trim()) {
         const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
         const limite = membresia ? membresia.limite_invitados_mes : 5;
         const totalMes = await Invitado.contarInvitadosMes(req.session.usuario.id);
@@ -129,15 +145,15 @@ const reservaController = {
             usuario_id: req.session.usuario.id,
             instalacion_id,
             reserva_id: nuevaReserva.id,
-            cedula: invitado_cedula,
-            nombre_completo: invitado_nombre,
+            cedula: invitado_cedula.trim(),
+            nombre_completo: invitado_nombre.trim(),
             fecha_visita: fecha,
             parentesco_relacion: invitado_parentesco || 'amigo'
           });
         }
       }
 
-      // 8. Notificar al socio por correo
+      // 9. Notificar al socio por correo
       const plantilla = await Notificacion.obtenerPlantilla('reserva_confirmada');
       if (plantilla) {
         let cuerpo = plantilla.cuerpo
@@ -166,6 +182,7 @@ const reservaController = {
     } catch (err) {
       console.error('Error en postCrearReserva:', err);
       req.session.errorFormReserva = 'Error interno al procesar la reserva.';
+      req.session.datosFormReserva = req.body;
       res.redirect('/socio/reservar');
     }
   },
@@ -181,9 +198,12 @@ const reservaController = {
       }
 
       const instalaciones = await Instalacion.listarTodas();
+      const serviciosPrevios = await Reserva.obtenerServiciosSeleccionados(id);
+
       res.render('socio/editar-reserva', {
         reserva,
         instalaciones,
+        serviciosPrevios: serviciosPrevios.map(s => s.nombre_servicio),
         error: req.session.errorEditarReserva || null
       });
       delete req.session.errorEditarReserva;
@@ -219,10 +239,14 @@ const reservaController = {
         : (servicios_adicionales ? [servicios_adicionales] : []);
 
       serviciosArray.forEach(clave => {
-        if (MAPA_SERVICIOS[clave]) {
+        if (MAPA_SERVICIOS[clave] && String(MAPA_SERVICIOS[clave].instalacion_id) === String(instalacion_id)) {
           totalServicios += MAPA_SERVICIOS[clave].costo;
         }
       });
+
+      // Obtener costo anterior para ajustar cobros
+      const reservaAnterior = await Reserva.obtenerPorId(id);
+      const diferenciaCargos = totalServicios - Number(reservaAnterior.costo_servicios || 0);
 
       // 4. Actualizar reserva
       await Reserva.actualizar({
@@ -239,9 +263,16 @@ const reservaController = {
       // 5. Actualizar servicios asociados
       await Reserva.limpiarServiciosSeleccionados(id);
       for (const clave of serviciosArray) {
-        if (MAPA_SERVICIOS[clave]) {
+        if (MAPA_SERVICIOS[clave] && String(MAPA_SERVICIOS[clave].instalacion_id) === String(instalacion_id)) {
           await Reserva.agregarServicioSeleccionado(id, null, MAPA_SERVICIOS[clave].nombre, MAPA_SERVICIOS[clave].costo);
         }
+      }
+
+      // 6. Ajustar estado de cuenta
+      if (diferenciaCargos > 0) {
+        await Cobro.agregarCargosServicio(req.session.usuario.id, diferenciaCargos);
+      } else if (diferenciaCargos < 0) {
+        await Cobro.descontarCargosServicio(req.session.usuario.id, Math.abs(diferenciaCargos));
       }
 
       req.session.mensajeReserva = 'Tu reserva ha sido modificada y actualizada exitosamente.';
@@ -260,6 +291,11 @@ const reservaController = {
       const cancelada = await Reserva.cancelar(id, req.session.usuario.id);
 
       if (cancelada) {
+        // Descontar cobro de servicios adicionales si los tenía
+        if (Number(reserva.costo_servicios) > 0) {
+          await Cobro.descontarCargosServicio(req.session.usuario.id, Number(reserva.costo_servicios));
+        }
+
         // Enviar correo de cancelación
         const plantilla = await Notificacion.obtenerPlantilla('reserva_cancelada');
         if (plantilla) {
@@ -281,7 +317,7 @@ const reservaController = {
             asunto: plantilla.asunto
           });
         }
-        req.session.mensajeReserva = 'Reserva cancelada correctamente.';
+        req.session.mensajeReserva = 'Reserva cancelada correctamente. Cualquier cargo adicional asociado fue reembolsado a tu estado de cuenta.';
       } else {
         req.session.errorReserva = 'No se pudo cancelar la reserva.';
       }

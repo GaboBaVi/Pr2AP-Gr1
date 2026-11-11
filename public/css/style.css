@@ -3,8 +3,8 @@
   --card-bg: #f5f3ee;
   --text-dark: #222222;
   --text-muted: #666666;
-  --primary-green: #3ea647;
-  --primary-green-hover: #348f3c;
+  --primary-green: #2e7d32;
+  --primary-green-hover: #256628;
   --dark-btn: #1f1f1f;
   --dark-btn-hover: #000000;
   --border-color: #dcd6cb;
@@ -20,21 +20,27 @@ body {
   margin: 0;
 }
 
-/* NAVBAR */
+/* NAVBAR & LOGO */
 .navbar-custom {
   background-color: transparent;
-  padding: 1.2rem 2.5rem;
+  padding: 1rem 2rem;
 }
 
 .brand-logo {
-  height: 48px;
+  height: 65px;
+  width: auto;
   object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.03);
 }
 
 .nav-link-custom {
   color: #333 !important;
   font-weight: 500;
-  margin: 0 1rem;
+  margin: 0 0.8rem;
   text-decoration: none;
   font-size: 0.95rem;
   transition: color 0.2s;
@@ -47,12 +53,16 @@ body {
 .btn-header-action {
   background-color: var(--primary-green);
   color: white !important;
-  border-radius: 20px;
-  padding: 0.45rem 1.4rem;
+  border-radius: 8px;
+  padding: 0.5rem 1.4rem;
   font-weight: 500;
   font-size: 0.9rem;
   text-decoration: none;
   border: none;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color 0.2s;
 }
 
@@ -63,22 +73,25 @@ body {
 /* CARDS */
 .custom-card {
   background-color: var(--card-bg);
-  border-radius: 18px;
+  border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-  padding: 2rem;
+  padding: 1.8rem;
 }
 
-/* BUTTONS */
+/* BUTTONS ESTANDARIZADOS */
 .btn-dark-pill {
   background-color: var(--dark-btn);
   color: #ffffff !important;
-  border-radius: 25px;
-  padding: 0.6rem 1.8rem;
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
   font-weight: 600;
   border: none;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
 }
@@ -89,30 +102,47 @@ body {
 }
 
 .btn-sm-pill {
-  padding: 0.35rem 1rem;
+  height: 32px;
+  padding: 0.3rem 0.9rem;
   font-size: 0.85rem;
+  border-radius: 6px;
 }
 
-/* FORMS */
+.btn-cancel-modal {
+  border-radius: 8px;
+  height: 38px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* FORMS & SEARCH BARS */
 .form-control-custom {
   background-color: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
   font-size: 0.95rem;
+  height: 38px;
 }
 
 .form-control-custom:focus {
   border-color: var(--primary-green);
-  box-shadow: 0 0 0 0.2rem rgba(62, 166, 71, 0.15);
+  box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.15);
 }
 
-/* HERO POOL IMAGE ON DASHBOARD */
+/* ALERTS & POPUPS AUTO-DISMISS */
+.alert {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* HERO POOL IMAGE */
 .hero-img-box {
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  height: 240px;
+  height: 250px;
 }
 
 .hero-img-box img {

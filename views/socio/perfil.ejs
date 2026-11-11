@@ -114,7 +114,7 @@
           </div>
           <div class="mb-3">
             <label class="form-label small text-muted">Teléfono</label>
-            <input type="tel" name="telefono" class="form-control form-control-custom" value="<%= usuario.telefono || '' %>">
+            <input type="tel" name="telefono" class="form-control form-control-custom" value="<%= usuario.telefono || '' %>" pattern="^(?:\+?506[- ]?)?[2-8]\d{3}[- ]?\d{4}$" title="Número costarricense de 8 dígitos (ej. 8888-8888)">
           </div>
           <div class="mb-3">
             <label class="form-label small text-muted">Dirección</label>
@@ -126,8 +126,8 @@
           </div>
         </div>
         <div class="modal-footer border-0">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-dark-pill btn-sm-pill">Guardar Cambios</button>
+          <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-dark-pill">Guardar Cambios</button>
         </div>
       </form>
     </div>
@@ -144,14 +144,14 @@
       </div>
       <form action="/auth/perfil/beneficiarios" method="POST">
         <div class="modal-body border-0">
-          <p class="small text-muted mb-3">Disponible únicamente para membresías de tipo Familiar.</p>
+          <p class="small text-muted mb-3">Disponible únicamente para membresías de tipo Familiar (límite máximo: <%= membresia.limite_beneficiarios || 4 %> beneficiarios).</p>
           <div class="mb-3">
             <label class="form-label small text-muted">Nombre Completo</label>
             <input type="text" name="nombre_completo" class="form-control form-control-custom" required>
           </div>
           <div class="mb-3">
             <label class="form-label small text-muted">Cédula</label>
-            <input type="text" name="cedula" class="form-control form-control-custom" required>
+            <input type="text" name="cedula" class="form-control form-control-custom" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$" title="Cédula válida de 9 dígitos (ej. 1-1234-0567)" required>
           </div>
           <div class="mb-3">
             <label class="form-label small text-muted">Parentesco</label>
@@ -168,8 +168,8 @@
           </div>
         </div>
         <div class="modal-footer border-0">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn-dark-pill btn-sm-pill">Registrar Beneficiario</button>
+          <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-dark-pill">Registrar Beneficiario</button>
         </div>
       </form>
     </div>
