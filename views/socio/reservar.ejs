@@ -53,7 +53,7 @@
               
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0 fw-bold">Fecha de Reserva</label>
-                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required onchange="cargarHorariosDisponibles()">
+                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required onchange="cargarHorariosDisponibles()" oninput="cargarHorariosDisponibles()">
               </div>
 
               <!-- SELECTOR DE HORARIOS DISPONIBLES (SOLO LIBRES) -->
@@ -88,8 +88,14 @@
               </div>
 
               <div class="mb-2 mt-auto">
-                <label class="form-label small text-muted mb-0 fw-bold">Número de Personas</label>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <label class="form-label small text-muted mb-0 fw-bold">Número de Personas</label>
+                  <span class="badge border fw-semibold" id="badgeAforoMaximo" style="background-color: #e2e8f0; color: #0f172a; font-size: 0.72rem;">Máx: -</span>
+                </div>
                 <input type="number" name="num_personas" id="inputNumPersonas" min="1" max="100" class="form-control form-control-custom" value="<%= datosPrevios.num_personas || 1 %>" required>
+                <div id="avisoExcesoAforo" class="text-danger small mt-1 d-none" style="font-size: 0.75rem;">
+                  <i class="bi bi-exclamation-circle-fill me-1"></i> Capacidad máxima permitida: <strong id="txtLimiteAforo">-</strong> personas.
+                </div>
               </div>
             </div>
           </div>
@@ -238,7 +244,7 @@ function actualizarDetallesInstalacion() {
   const sinServicios = document.getElementById('sinServicios');
 
   if (selectedOption && selectedOption.value) {
-    const aforo = selectedOption.getAttribute('data-aforo');
+    const aforo = parseInt(selectedOption.getAttribute('data-aforo'), 10) || 1;
     const apertura = selectedOption.getAttribute('data-apertura');
     const cierre = selectedOption.getAttribute('data-cierre');
 
@@ -246,9 +252,22 @@ function actualizarDetallesInstalacion() {
     document.getElementById('txtHorario').innerText = `${apertura} a ${cierre}`;
     infoBox.classList.remove('d-none');
 
-    // Ajustar max del input personas
+    // Ajustar maximo de personas y badges de capacidad
     const inputPersonas = document.getElementById('inputNumPersonas');
+    const badgeAforo = document.getElementById('badgeAforoMaximo');
+    const txtLimite = document.getElementById('txtLimiteAforo');
+    const avisoExceso = document.getElementById('avisoExcesoAforo');
+
     inputPersonas.max = aforo;
+    if (badgeAforo) badgeAforo.textContent = `Máx: ${aforo}`;
+    if (txtLimite) txtLimite.textContent = aforo;
+
+    // Si el valor actual supera el aforo permitido, reducirlo al tope
+    if (parseInt(inputPersonas.value, 10) > aforo) {
+      inputPersonas.value = aforo;
+    }
+    inputPersonas.classList.remove('is-invalid');
+    if (avisoExceso) avisoExceso.classList.add('d-none');
 
     // Ajustar min/max horas
     document.getElementById('inputHoraInicio').min = apertura;
@@ -282,9 +301,9 @@ let indicesSeleccionados = [];
 
 function formatHora12(h24) {
   if (!h24) return '';
-  const parts = h24.slice(0, 5).split(':');
+  const parts = String(h24).slice(0, 5).split(':');
   let h = parseInt(parts[0], 10);
-  const m = parts[1];
+  const m = parts[1] || '00';
   const ampm = h >= 12 ? 'pm' : 'am';
   h = h % 12 || 12;
   return `${h}:${m} ${ampm}`;
@@ -382,7 +401,9 @@ function manejarClickSlot(index) {
     for (let i = minIdx; i <= maxIdx; i++) {
       nuevoRango.push(i);
       if (i > minIdx) {
-        if (slotsDisponibles[i].hora_inicio !== slotsDisponibles[i - 1].hora_fin) {
+        const slotActualInicio = slotsDisponibles[i].hora_inicio || slotsDisponibles[i].inicio;
+        const slotPrevioFin = slotsDisponibles[i - 1].hora_fin || slotsDisponibles[i - 1].fin;
+        if (slotActualInicio !== slotPrevioFin) {
           continuo = false;
           break;
         }
@@ -405,7 +426,9 @@ function preseleccionarRango(inicio, fin) {
   const finShort = fin.slice(0, 5);
   const seleccion = [];
   slotsDisponibles.forEach((s, idx) => {
-    if (s.hora_inicio >= iniShort && s.hora_fin <= finShort) {
+    const sIni = (s.hora_inicio || s.inicio || '').slice(0, 5);
+    const sFin = (s.hora_fin || s.fin || '').slice(0, 5);
+    if (sIni >= iniShort && sFin <= finShort) {
       seleccion.push(idx);
     }
   });
@@ -435,12 +458,15 @@ function actualizarUISeleccionHorarios() {
     const primerSlot = slotsDisponibles[indicesSeleccionados[0]];
     const ultimoSlot = slotsDisponibles[indicesSeleccionados[indicesSeleccionados.length - 1]];
 
-    inputInicio.value = primerSlot.hora_inicio;
-    inputFin.value = ultimoSlot.hora_fin;
+    const hIni = primerSlot.hora_inicio || primerSlot.inicio;
+    const hFin = ultimoSlot.hora_fin || ultimoSlot.fin;
+
+    inputInicio.value = hIni;
+    inputFin.value = hFin;
 
     const horasTotales = indicesSeleccionados.length;
     cajaResumen.classList.remove('d-none');
-    txtResumen.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${formatHora12(primerSlot.hora_inicio)} a ${formatHora12(ultimoSlot.hora_fin)}`;
+    txtResumen.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> ${formatHora12(hIni)} a ${formatHora12(hFin)}`;
     txtDuracion.textContent = horasTotales === 1 
       ? '1 hora seleccionada (solo un tiempo)' 
       : `${horasTotales} horas seleccionadas (varios tiempos continuos)`;
@@ -456,6 +482,8 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
   const inputFecha = document.getElementById('inputFecha');
   const inputHoraInicio = document.getElementById('inputHoraInicio');
   const inputHoraFin = document.getElementById('inputHoraFin');
+  const inputPersonas = document.getElementById('inputNumPersonas');
+  const selectInst = document.getElementById('selectInstalacion');
   const hoy = obtenerFechaHoy();
   const horaActual = obtenerHoraActual();
 
@@ -482,7 +510,66 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
     alert('La hora de inicio debe ser anterior a la hora de finalización.');
     return;
   }
+
+  // Validar capacidad de la instalacion
+  const selectedOption = selectInst.options[selectInst.selectedIndex];
+  if (selectedOption && selectedOption.value) {
+    const aforoMax = parseInt(selectedOption.getAttribute('data-aforo'), 10) || 100;
+    const numPers = parseInt(inputPersonas.value, 10);
+    if (numPers > aforoMax) {
+      e.preventDefault();
+      alert(`No puedes ingresar ${numPers} personas. La capacidad máxima permitida para ${selectedOption.textContent.trim()} es de ${aforoMax} personas.`);
+      inputPersonas.focus();
+      return;
+    }
+    if (numPers < 1 || isNaN(numPers)) {
+      e.preventDefault();
+      alert('El número de personas debe ser al menos 1.');
+      inputPersonas.focus();
+      return;
+    }
+  }
 });
+
+// Control en tiempo real de capacidad en inputNumPersonas
+const inputPersonas = document.getElementById('inputNumPersonas');
+if (inputPersonas) {
+  inputPersonas.addEventListener('input', function() {
+    const select = document.getElementById('selectInstalacion');
+    const selectedOption = select.options[select.selectedIndex];
+    if (selectedOption && selectedOption.value) {
+      const aforo = parseInt(selectedOption.getAttribute('data-aforo'), 10) || 100;
+      const aviso = document.getElementById('avisoExcesoAforo');
+      const val = parseInt(this.value, 10);
+      if (val > aforo) {
+        this.classList.add('is-invalid');
+        if (aviso) aviso.classList.remove('d-none');
+      } else {
+        this.classList.remove('is-invalid');
+        if (aviso) aviso.classList.add('d-none');
+      }
+    }
+  });
+
+  inputPersonas.addEventListener('blur', function() {
+    const select = document.getElementById('selectInstalacion');
+    const selectedOption = select.options[select.selectedIndex];
+    if (selectedOption && selectedOption.value) {
+      const aforo = parseInt(selectedOption.getAttribute('data-aforo'), 10) || 100;
+      const aviso = document.getElementById('avisoExcesoAforo');
+      const val = parseInt(this.value, 10);
+      if (val > aforo) {
+        this.value = aforo;
+        this.classList.remove('is-invalid');
+        if (aviso) aviso.classList.add('d-none');
+      } else if (val < 1 || isNaN(val)) {
+        this.value = 1;
+        this.classList.remove('is-invalid');
+        if (aviso) aviso.classList.add('d-none');
+      }
+    }
+  });
+}
 
 // Manejo dinamico de multiples invitados (Paso #4)
 let contadorInvitados = document.querySelectorAll('#contenedorInvitados .bloque-invitado').length || 1;
@@ -527,6 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputFecha = document.getElementById('inputFecha');
   const hoy = obtenerFechaHoy();
   inputFecha.min = hoy;
+  inputFecha.addEventListener('change', cargarHorariosDisponibles);
+  inputFecha.addEventListener('input', cargarHorariosDisponibles);
   actualizarDetallesInstalacion();
   cargarHorariosDisponibles();
 });

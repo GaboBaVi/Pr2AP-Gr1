@@ -71,10 +71,10 @@ const Reserva = {
     if (instData.bloqueada_mantenimiento) {
       const fechaInstStr = instData.mantenimiento_fecha 
         ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(instData.mantenimiento_fecha))
-        : null;
+        : hoyStr;
 
       // Solo aplica si coincide con la fecha seleccionada
-      if (!fechaInstStr || fechaInstStr === fecha) {
+      if (fechaInstStr === fecha) {
         if (instData.mantenimiento_tipo === 'horas' && instData.mantenimiento_hora_inicio && instData.mantenimiento_hora_fin) {
           const mInicioMin = horaEnMinutos(instData.mantenimiento_hora_inicio);
           const mFinMin = horaEnMinutos(instData.mantenimiento_hora_fin);

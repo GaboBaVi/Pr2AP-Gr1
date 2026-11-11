@@ -90,11 +90,11 @@ const reservaController = {
       const fechaConsultaStr = fecha;
       const fechaInstStr = inst.mantenimiento_fecha 
         ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(inst.mantenimiento_fecha))
-        : null;
+        : hoyCR;
 
       // Mantenimiento todo el día SOLO para la fecha bloqueada
       if (inst.bloqueada_mantenimiento) {
-        if (!fechaInstStr || fechaInstStr === fechaConsultaStr) {
+        if (fechaInstStr === fechaConsultaStr) {
           if (!inst.mantenimiento_tipo || inst.mantenimiento_tipo === 'todo_el_dia') {
             return res.json({
               disponible: false,
@@ -138,7 +138,7 @@ const reservaController = {
 
         // Validar mantenimiento por horas (solo si coincide la fecha)
         if (inst.bloqueada_mantenimiento && inst.mantenimiento_tipo === 'horas') {
-          if (!fechaInstStr || fechaInstStr === fechaConsultaStr) {
+          if (fechaInstStr === fechaConsultaStr) {
             const mInicioMin = horaEnMinutos(inst.mantenimiento_hora_inicio);
             const mFinMin = horaEnMinutos(inst.mantenimiento_hora_fin);
             if (inicioMin < mFinMin && finMin > mInicioMin) {
@@ -176,6 +176,8 @@ const reservaController = {
         slotsDisponibles.push({
           inicio: hInicioStr,
           fin: hFinStr,
+          hora_inicio: hInicioStr,
+          hora_fin: hFinStr,
           label: `${format12(hInicioStr)} - ${format12(hFinStr)}`,
           hora: h
         });
@@ -212,7 +214,7 @@ const reservaController = {
 
       // 2. Validar aforo
       if (parseInt(num_personas, 10) > check.instalacion.aforo_maximo) {
-        req.session.errorFormReserva = `El aforo máximo permitido para ${check.instalacion.nombre} es de ${check.instalacion.aforo_maximo} personas.`;
+        req.session.errorFormReserva = `El aforo máximo permitido para ${check.instalacion.nombre} es de ${check.instalacion.aforo_maximo} personas. No es posible reservar para ${num_personas} personas.`;
         req.session.datosFormReserva = req.body;
         return res.redirect('/socio/reservar');
       }
@@ -377,7 +379,7 @@ const reservaController = {
 
       // 2. Validar aforo
       if (parseInt(num_personas, 10) > check.instalacion.aforo_maximo) {
-        req.session.errorEditarReserva = `El aforo máximo para ${check.instalacion.nombre} es de ${check.instalacion.aforo_maximo} personas.`;
+        req.session.errorEditarReserva = `El aforo máximo para ${check.instalacion.nombre} es de ${check.instalacion.aforo_maximo} personas. No es posible reservar para ${num_personas} personas.`;
         return res.redirect(`/socio/reservas/editar/${id}`);
       }
 
