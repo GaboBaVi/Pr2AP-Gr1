@@ -9,6 +9,14 @@
     </div>
   <% } %>
 
+  <% if (error) { %>
+    <div class="col-12">
+      <div class="alert alert-danger py-2 small" role="alert">
+        <%= error %>
+      </div>
+    </div>
+  <% } %>
+
   <!-- COLUMNA PRINCIPAL: HISTORIAL DE RESERVAS CON PESTAÑAS -->
   <div class="col-lg-8">
     <div class="custom-card">
@@ -34,12 +42,12 @@
       <% } else { %>
         <div class="d-flex flex-column gap-3">
           <% reservas.forEach(r => { %>
-            <div class="border rounded-3 p-3 bg-white d-flex justify-content-between align-items-center">
+            <div class="border rounded-3 p-3 bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
                 <h6 class="fw-bold mb-1"><%= r.nombre_instalacion %></h6>
                 <p class="small text-muted mb-1">
                   <strong>Fecha:</strong> <%= new Date(r.fecha).toLocaleDateString() %> | 
-                  <strong>Horario:</strong> <%= r.hora_inicio %> - <%= r.hora_fin %>
+                  <strong>Horario:</strong> <%= r.hora_inicio.slice(0,5) %> - <%= r.hora_fin.slice(0,5) %>
                 </p>
                 <p class="small text-muted mb-0">
                   <strong>Personas:</strong> <%= r.num_personas %> | 
@@ -47,10 +55,13 @@
                 </p>
               </div>
               <% if (estadoActual === 'activa') { %>
-                <form action="/socio/reservas/cancelar" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta reserva?');">
-                  <input type="hidden" name="id" value="<%= r.id %>">
-                  <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Cancelar</button>
-                </form>
+                <div class="d-flex gap-2 align-items-center">
+                  <a href="/socio/reservas/editar/<%= r.id %>" class="btn btn-sm btn-outline-dark rounded-pill">Modificar</a>
+                  <form action="/socio/reservas/cancelar" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta reserva?');">
+                    <input type="hidden" name="id" value="<%= r.id %>">
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Cancelar</button>
+                  </form>
+                </div>
               <% } %>
             </div>
           <% }) %>
@@ -75,7 +86,7 @@
         </div>
       </div>
       <div class="progress mt-2" style="height: 8px;">
-        <div class="progress-bar bg-success" style="width: <%= (totalInvitadosMes / limiteInvitados) * 100 %>%"></div>
+        <div class="progress-bar bg-success" style="width: <%= Math.min(100, (totalInvitadosMes / (limiteInvitados || 1)) * 100) %>%"></div>
       </div>
     </div>
 

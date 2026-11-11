@@ -4,27 +4,40 @@
   <div class="col-12">
     <div class="custom-card p-4">
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h4 class="fw-bold mb-0">Gestión de Socios y Cuentas</h4>
-        <input type="text" class="form-control form-control-custom form-control-sm" style="max-width: 300px;" placeholder="Búsqueda de usuarios..." id="busquedaSocios">
+        <div>
+          <h4 class="fw-bold mb-1">Gestión de Socios y Cuentas</h4>
+          <span class="text-muted small">Administración de usuarios, roles, contraseñas y membresías</span>
+        </div>
+        <div class="d-flex gap-2">
+          <input type="text" class="form-control form-control-custom form-control-sm" style="max-width: 250px;" placeholder="Buscar socio..." id="busquedaSocios" onkeyup="filtrarSocios()">
+          <a href="/admin/recepcion" class="btn btn-sm btn-outline-dark rounded-pill">Recepción</a>
+          <a href="/admin/reportes" class="btn btn-sm btn-outline-primary rounded-pill">Reporte Demanda</a>
+        </div>
       </div>
 
       <% if (mensaje) { %>
-        <div class="alert alert-info py-2 small mb-3">
+        <div class="alert alert-success py-2 small mb-3">
           <%= mensaje %>
         </div>
       <% } %>
 
+      <% if (error) { %>
+        <div class="alert alert-danger py-2 small mb-3">
+          <%= error %>
+        </div>
+      <% } %>
+
       <div class="table-responsive">
-        <table class="table table-hover align-middle small">
+        <table class="table table-hover align-middle small" id="tablaSocios">
           <thead class="table-light">
             <tr>
               <th>Cédula</th>
               <th>Nombre</th>
-              <th>Tipo Membresía</th>
-              <th>Estado Cuenta</th>
+              <th>Membresía</th>
+              <th>Estado Socio</th>
               <th>Rol Actual</th>
-              <th>Gestión de Cuenta</th>
-              <th>Modificar Rol</th>
+              <th>Acciones de Cuenta</th>
+              <th>Membresía & Soporte</th>
             </tr>
           </thead>
           <tbody>
@@ -33,24 +46,16 @@
                 <tr>
                   <td class="fw-bold"><%= s.cedula %></td>
                   <td><%= s.nombre_completo %></td>
-                  <td><span class="badge bg-secondary text-capitalize"><%= s.tipo_membresia || 'Individual' %></span></td>
                   <td>
-                    <span class="badge bg-<%= s.estado === 'activo' ? 'success' : (s.estado === 'suspendido' ? 'danger' : 'warning text-dark') %>">
-                      <%= s.estado.toUpperCase() %>
+                    <span class="badge bg-secondary text-capitalize"><%= s.tipo_membresia || 'Individual' %></span>
+                    <span class="badge bg-<%= s.estado_membresia === 'activa' ? 'success' : (s.estado_membresia === 'suspendida' ? 'warning text-dark' : 'danger') %> text-capitalize">
+                      <%= s.estado_membresia || 'Activa' %>
                     </span>
                   </td>
-                  <td><span class="badge bg-dark"><%= s.rol %></span></td>
                   <td>
-                    <form action="/admin/socios/estado" method="POST" class="d-inline">
-                      <input type="hidden" name="id" value="<%= s.id %>">
-                      <% if (s.estado === 'activo') { %>
-                        <input type="hidden" name="estado" value="suspendido">
-                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">Suspender</button>
-                      <% } else { %>
-                        <input type="hidden" name="estado" value="activo">
-                        <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2">Activar</button>
-                      <% } %>
-                    </form>
+                    <span class="badge bg-<%= s.estado === 'activo' ? 'success' : (s.estado === 'suspendido' ? 'danger' : 'secondary') %>">
+                      <%= s.estado.toUpperCase() %>
+                    </span>
                   </td>
                   <td>
                     <form action="/admin/socios/rol" method="POST" class="d-flex gap-1 align-items-center">
@@ -61,8 +66,76 @@
                         <option value="encargado_instalaciones" <%= s.rol === 'encargado_instalaciones' ? 'selected' : '' %>>Encargado Instalaciones</option>
                         <option value="encargado_cobros" <%= s.rol === 'encargado_cobros' ? 'selected' : '' %>>Encargado Cobros</option>
                       </select>
-                      <button type="submit" class="btn-dark-pill btn-sm-pill py-0 px-2" style="font-size: 0.75rem;">Guardar</button>
+                      <button type="submit" class="btn btn-sm btn-dark py-0 px-2" style="font-size: 0.75rem;">OK</button>
                     </form>
+                  </td>
+                  <td>
+                    <form action="/admin/socios/estado" method="POST" class="d-inline">
+                      <input type="hidden" name="id" value="<%= s.id %>">
+                      <% if (s.estado === 'activo') { %>
+                        <input type="hidden" name="estado" value="suspendido">
+                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="return confirm('¿Suspender la cuenta de <%= s.nombre_completo %>?')">Suspender</button>
+                      <% } else { %>
+                        <input type="hidden" name="estado" value="activo">
+                        <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2">Activar</button>
+                      <% } %>
+                    </form>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <!-- MODAL MEMBRESIA -->
+                      <button type="button" class="btn btn-sm btn-outline-dark py-0 px-2" data-bs-toggle="modal" data-bs-target="#modalMembresia<%= s.id %>">
+                        Editar Membresía
+                      </button>
+
+                      <!-- RESET PASSWORD -->
+                      <form action="/admin/socios/reset-password" method="POST" class="d-inline" onsubmit="return confirm('¿Restablecer contraseña para <%= s.nombre_completo %>? Se le enviará una clave temporal.');">
+                        <input type="hidden" name="id" value="<%= s.id %>">
+                        <button type="submit" class="btn btn-sm btn-outline-warning text-dark py-0 px-2">Reset Clave</button>
+                      </form>
+                    </div>
+
+                    <!-- MODAL EDITAR MEMBRESIA -->
+                    <div class="modal fade" id="modalMembresia<%= s.id %>" tabindex="-1">
+                      <div class="modal-dialog">
+                        <div class="modal-content custom-card p-3">
+                          <div class="modal-header border-0">
+                            <h5 class="modal-title fw-bold">Gestión de Membresía - <%= s.nombre_completo %></h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <form action="/admin/socios/membresia" method="POST">
+                            <input type="hidden" name="usuario_id" value="<%= s.id %>">
+                            <div class="modal-body border-0">
+                              <div class="mb-3">
+                                <label class="form-label small text-muted">Tipo de Membresía</label>
+                                <select name="tipo" class="form-select form-control-custom" required>
+                                  <option value="individual" <%= s.tipo_membresia === 'individual' ? 'selected' : '' %>>Individual</option>
+                                  <option value="familiar" <%= s.tipo_membresia === 'familiar' ? 'selected' : '' %>>Familiar</option>
+                                  <option value="corporativa" <%= s.tipo_membresia === 'corporativa' ? 'selected' : '' %>>Corporativa</option>
+                                  <option value="honoraria" <%= s.tipo_membresia === 'honoraria' ? 'selected' : '' %>>Honoraria</option>
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label small text-muted">Estado de la Membresía</label>
+                                <select name="estado" class="form-select form-control-custom" required>
+                                  <option value="activa" <%= s.estado_membresia === 'activa' ? 'selected' : '' %>>Activa</option>
+                                  <option value="suspendida" <%= s.estado_membresia === 'suspendida' ? 'selected' : '' %>>Suspendida</option>
+                                  <option value="vencida" <%= s.estado_membresia === 'vencida' ? 'selected' : '' %>>Vencida</option>
+                                </select>
+                              </div>
+                              <div class="mb-3">
+                                <label class="form-label small text-muted">Motivo del Cambio (Historial)</label>
+                                <input type="text" name="motivo" class="form-control form-control-custom" placeholder="Ej. Solicitud del socio, falta de pago..." required>
+                              </div>
+                            </div>
+                            <div class="modal-footer border-0">
+                              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                              <button type="submit" class="btn-dark-pill btn-sm-pill">Guardar Cambios</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               <% }) %>
@@ -75,5 +148,16 @@
     </div>
   </div>
 </div>
+
+<script>
+function filtrarSocios() {
+  const query = document.getElementById('busquedaSocios').value.toLowerCase();
+  const rows = document.querySelectorAll('#tablaSocios tbody tr');
+  rows.forEach(r => {
+    const text = r.innerText.toLowerCase();
+    r.style.display = text.includes(query) ? '' : 'none';
+  });
+}
+</script>
 
 <%- include('../layouts/footer') %>

@@ -19,12 +19,12 @@ const authController = {
     try {
       const usuario = await Usuario.buscarPorCorreo(correo);
       if (!usuario) {
-        req.session.mensajeError = 'Credenciales invalidas.';
+        req.session.mensajeError = 'Credenciales inválidas.';
         return res.redirect('/auth/login');
       }
 
       if (usuario.estado === 'suspendido' || usuario.estado === 'inactivo') {
-        req.session.mensajeError = 'Tu cuenta esta bloqueada o inactiva. Contacta al administrador.';
+        req.session.mensajeError = 'Tu cuenta está bloqueada o inactiva. Contacta a la administración.';
         return res.redirect('/auth/login');
       }
 
@@ -32,14 +32,14 @@ const authController = {
       if (!match) {
         const estadoActualizado = await Usuario.incrementarIntentos(usuario.id);
         if (estadoActualizado.intentos_fallidos >= 5) {
-          req.session.mensajeError = 'Cuenta bloqueada por multiples intentos fallidos.';
+          req.session.mensajeError = 'Tu cuenta ha sido bloqueada tras 5 intentos fallidos consecutivos.';
         } else {
-          req.session.mensajeError = `Contraseña incorrecta. Intentos restantes: ${5 - estadoActualizado.intentos_fallidos}`;
+          req.session.mensajeError = `Contraseña incorrecta. Intentos restantes antes del bloqueo: ${5 - estadoActualizado.intentos_fallidos}`;
         }
         return res.redirect('/auth/login');
       }
 
-      // Login exitoso: resetear intentos
+      // Login exitoso: restablecer intentos
       await Usuario.resetearIntentos(usuario.id);
 
       req.session.usuario = {
@@ -55,8 +55,8 @@ const authController = {
       }
       return res.redirect('/socio/dashboard');
     } catch (err) {
-      console.error(err);
-      req.session.mensajeError = 'Error al procesar el inicio de sesion.';
+      console.error('Error en postLogin:', err);
+      req.session.mensajeError = 'Error al procesar el inicio de sesión.';
       res.redirect('/auth/login');
     }
   },
@@ -70,7 +70,7 @@ const authController = {
     try {
       const existe = await Usuario.buscarPorCorreo(correo);
       if (existe) {
-        return res.render('auth/register', { error: 'El correo electronico ya esta registrado.' });
+        return res.render('auth/register', { error: 'El correo electrónico ya se encuentra registrado.' });
       }
 
       const hash = await bcrypt.hash(password, 10);
@@ -78,14 +78,21 @@ const authController = {
         cedula, nombre_completo, correo, telefono, direccion, fecha_nacimiento, password_hash: hash
       });
 
-      // Crear membresia individual por defecto
+      // Crear membresía individual activa por defecto
       await Membresia.crear({ usuario_id: nuevoUsuario.id, tipo: 'individual' });
 
-      req.session.mensajeExito = 'Registro exitoso. Por favor inicia sesion.';
+      // Enviar correo de bienvenida
+      await enviarCorreo({
+        para: correo,
+        asunto: '¡Bienvenido(a) a Club Valle Alto!',
+        html: `<h3>Hola ${nombre_completo},</h3><p>Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión y comenzar a reservar instalaciones.</p>`
+      });
+
+      req.session.mensajeExito = 'Registro exitoso. Ya puedes iniciar sesión con tus credenciales.';
       res.redirect('/auth/login');
     } catch (err) {
-      console.error(err);
-      res.render('auth/register', { error: 'Error al registrar la cuenta. Verifica que la cedula o correo no existan.' });
+      console.error('Error en postRegister:', err);
+      res.render('auth/register', { error: 'Error al registrar la cuenta. Verifica que la cédula o correo no estén repetidos.' });
     }
   },
 
@@ -98,24 +105,83 @@ const authController = {
     try {
       const usuario = await Usuario.buscarPorCorreo(correo);
       if (!usuario) {
-        return res.render('auth/recovery', { mensaje: 'Si el correo esta registrado, recibiras un enlace.', error: null });
+        return res.render('auth/recovery', { 
+          mensaje: 'Si el correo está registrado, recibirás un enlace de recuperación en los próximos minutos.', 
+          error: null 
+        });
       }
 
-      const token = crypto.randomBytes(20).toString('hex');
-      const expiracion = new Date(Date.now() + 3600000); // 1 hora
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiracion = new Date(Date.now() + 3600000); // 1 hora de validez
       await Usuario.guardarTokenRecuperacion(correo, token, expiracion);
 
-      // Enviar correo
+      const resetUrl = `http://${req.headers.host}/auth/reset/${token}`;
+
       await enviarCorreo({
         para: correo,
-        asunto: 'Recuperacion de Contraseña - Club Valle Alto',
-        html: `<p>Hola ${usuario.nombre_completo},</p><p>Para restablecer tu contraseña haz clic en el siguiente enlace:</p><a href="http://${req.headers.host}/auth/reset/${token}">Restablecer contraseña</a>`
+        asunto: 'Recuperación de Contraseña - Club Valle Alto',
+        html: `
+          <h3>Hola ${usuario.nombre_completo},</h3>
+          <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para definir una nueva:</p>
+          <p><a href="${resetUrl}" style="background-color: #3ea647; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Restablecer Contraseña</a></p>
+          <p><small>Este enlace expirará en 1 hora. Si no realizaste esta solicitud, ignora este mensaje.</small></p>
+        `
       });
 
-      res.render('auth/recovery', { mensaje: 'Se ha enviado un enlace de recuperacion a tu correo electronico.', error: null });
+      res.render('auth/recovery', { 
+        mensaje: 'Se ha enviado un enlace de recuperación a tu correo electrónico.', 
+        error: null 
+      });
     } catch (err) {
-      console.error(err);
-      res.render('auth/recovery', { mensaje: null, error: 'Ocurrio un error al procesar la solicitud.' });
+      console.error('Error en postRecovery:', err);
+      res.render('auth/recovery', { mensaje: null, error: 'Ocurrió un error al procesar la solicitud.' });
+    }
+  },
+
+  // Vista para ingresar nueva contraseña con el token
+  async getResetPassword(req, res) {
+    const { token } = req.params;
+    try {
+      const usuario = await Usuario.buscarPorToken(token);
+      if (!usuario) {
+        req.session.mensajeError = 'El enlace de recuperación es inválido o ha expirado.';
+        return res.redirect('/auth/login');
+      }
+      res.render('auth/reset-password', { token, error: null });
+    } catch (err) {
+      console.error('Error en getResetPassword:', err);
+      res.redirect('/auth/login');
+    }
+  },
+
+  // Procesar cambio de contraseña con el token
+  async postResetPassword(req, res) {
+    const { token } = req.params;
+    const { password, confirm_password } = req.body;
+
+    if (!password || password.length < 6) {
+      return res.render('auth/reset-password', { token, error: 'La contraseña debe tener al menos 6 caracteres.' });
+    }
+
+    if (password !== confirm_password) {
+      return res.render('auth/reset-password', { token, error: 'Las contraseñas no coinciden.' });
+    }
+
+    try {
+      const usuario = await Usuario.buscarPorToken(token);
+      if (!usuario) {
+        req.session.mensajeError = 'El enlace de recuperación ha expirado o ya fue utilizado.';
+        return res.redirect('/auth/login');
+      }
+
+      const hash = await bcrypt.hash(password, 10);
+      await Usuario.actualizarPassword(usuario.id, hash);
+
+      req.session.mensajeExito = 'Tu contraseña ha sido restablecida exitosamente. Inicia sesión con tu nueva contraseña.';
+      res.redirect('/auth/login');
+    } catch (err) {
+      console.error('Error en postResetPassword:', err);
+      res.render('auth/reset-password', { token, error: 'Error al actualizar la contraseña.' });
     }
   },
 
@@ -133,7 +199,7 @@ const authController = {
       });
       delete req.session.mensajePerfil;
     } catch (err) {
-      console.error(err);
+      console.error('Error en getPerfil:', err);
       res.redirect('/socio/dashboard');
     }
   },
@@ -145,11 +211,11 @@ const authController = {
         nombre_completo, telefono, direccion, fecha_nacimiento
       });
       req.session.usuario.nombre = nombre_completo;
-      req.session.mensajePerfil = 'Datos actualizados con exito.';
-      res.redirect('/socio/perfil');
+      req.session.mensajePerfil = 'Datos actualizados con éxito.';
+      res.redirect('/auth/perfil');
     } catch (err) {
-      console.error(err);
-      res.redirect('/socio/perfil');
+      console.error('Error en postEditarPerfil:', err);
+      res.redirect('/auth/perfil');
     }
   },
 
@@ -157,14 +223,14 @@ const authController = {
     try {
       const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
       if (!membresia || membresia.tipo !== 'familiar') {
-        req.session.mensajePerfil = 'Solo las membresias familiares pueden registrar beneficiarios.';
-        return res.redirect('/socio/perfil');
+        req.session.mensajePerfil = 'Solo las membresías de tipo Familiar permiten registrar beneficiarios adicionales.';
+        return res.redirect('/auth/perfil');
       }
 
       const total = await Membresia.contarBeneficiarios(membresia.id);
       if (total >= membresia.limite_beneficiarios) {
-        req.session.mensajePerfil = `Has alcanzado el limite maximo de ${membresia.limite_beneficiarios} beneficiarios.`;
-        return res.redirect('/socio/perfil');
+        req.session.mensajePerfil = `Has alcanzado el límite máximo de ${membresia.limite_beneficiarios} beneficiarios permitidos por reglamento.`;
+        return res.redirect('/auth/perfil');
       }
 
       const { cedula, nombre_completo, parentesco, fecha_nacimiento } = req.body;
@@ -174,10 +240,10 @@ const authController = {
       });
 
       req.session.mensajePerfil = 'Beneficiario registrado exitosamente.';
-      res.redirect('/socio/perfil');
+      res.redirect('/auth/perfil');
     } catch (err) {
-      console.error(err);
-      res.redirect('/socio/perfil');
+      console.error('Error en postAgregarBeneficiario:', err);
+      res.redirect('/auth/perfil');
     }
   },
 

@@ -1,0 +1,79 @@
+<%- include('../layouts/header') %>
+
+<div class="row my-4">
+  <div class="col-12">
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h4 class="fw-bold mb-1">Reporte de Demanda y Uso de Instalaciones</h4>
+          <span class="text-muted small">Identificación de áreas con mayor y menor solicitud por periodo</span>
+        </div>
+        <form action="/admin/reportes" method="GET" class="d-flex gap-2 align-items-center">
+          <input type="date" name="inicio" value="<%= inicio %>" class="form-control form-control-custom form-control-sm">
+          <span class="small text-muted">a</span>
+          <input type="date" name="fin" value="<%= fin %>" class="form-control form-control-custom form-control-sm">
+          <button type="submit" class="btn-dark-pill btn-sm-pill">Filtrar</button>
+        </form>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <% if (demanda && demanda.length > 0) { %>
+          <div class="col-md-6">
+            <div class="border rounded-4 p-3 bg-white h-100">
+              <span class="badge bg-success mb-2">Mayor Demanda</span>
+              <h5 class="fw-bold text-success mb-1"><%= demanda[0].nombre %></h5>
+              <p class="text-muted small mb-0">
+                Total de Reservas: <strong><%= demanda[0].total_reservas %></strong> | 
+                Personas Totales: <strong><%= demanda[0].total_personas %></strong>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-4 p-3 bg-white h-100">
+              <span class="badge bg-warning text-dark mb-2">Menor Demanda</span>
+              <h5 class="fw-bold text-dark mb-1"><%= demanda[demanda.length - 1].nombre %></h5>
+              <p class="text-muted small mb-0">
+                Total de Reservas: <strong><%= demanda[demanda.length - 1].total_reservas %></strong> | 
+                Personas Totales: <strong><%= demanda[demanda.length - 1].total_personas %></strong>
+              </p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th>Instalación</th>
+              <th class="text-center">Total Reservas Confirmadas</th>
+              <th class="text-center">Total de Personas Atendidas</th>
+              <th>Nivel de Demanda</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (demanda && demanda.length > 0) { %>
+              <% demanda.forEach((d, idx) => { %>
+                <tr>
+                  <td class="fw-bold"><%= d.nombre %></td>
+                  <td class="text-center fs-6"><%= d.total_reservas %></td>
+                  <td class="text-center fs-6"><%= d.total_personas %></td>
+                  <td>
+                    <div class="progress" style="height: 10px;">
+                      <% const porcentaje = demanda[0].total_reservas > 0 ? (d.total_reservas / demanda[0].total_reservas) * 100 : 0; %>
+                      <div class="progress-bar <%= idx === 0 ? 'bg-success' : (idx === demanda.length - 1 ? 'bg-secondary' : 'bg-primary') %>" style="width: <%= Math.max(10, porcentaje) %>%;"></div>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr><td colspan="4" class="text-center text-muted py-4">No hay datos en el rango seleccionado.</td></tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

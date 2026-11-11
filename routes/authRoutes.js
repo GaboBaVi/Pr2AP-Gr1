@@ -3,13 +3,15 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { estaAutenticado, esSocio } = require('../middlewares/auth');
 
-// Rutas publicas de autenticacion
+// Rutas públicas de autenticación
 router.get('/login', authController.getLogin);
 router.post('/login', authController.postLogin);
 router.get('/register', authController.getRegister);
 router.post('/register', authController.postRegister);
 router.get('/recovery', authController.getRecovery);
 router.post('/recovery', authController.postRecovery);
+router.get('/reset/:token', authController.getResetPassword);
+router.post('/reset/:token', authController.postResetPassword);
 router.get('/logout', authController.logout);
 
 // Rutas protegidas del socio (Perfil y datos)

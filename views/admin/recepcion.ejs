@@ -1,0 +1,61 @@
+<%- include('../layouts/header') %>
+
+<div class="row my-4">
+  <div class="col-12">
+    <div class="custom-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h4 class="fw-bold mb-1">Control de Acceso y Recepción de Invitados</h4>
+          <span class="text-muted small">Listado de invitados autorizados para ingresar al club</span>
+        </div>
+        <form action="/admin/recepcion" method="GET" class="d-flex gap-2 align-items-center">
+          <label class="small text-muted mb-0 fw-bold">Fecha:</label>
+          <input type="date" name="fecha" value="<%= fecha %>" class="form-control form-control-custom form-control-sm" onchange="this.form.submit()">
+        </form>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle small">
+          <thead class="table-light">
+            <tr>
+              <th>Cédula Invitado</th>
+              <th>Nombre del Invitado</th>
+              <th>Socio Responsable</th>
+              <th>Instalación</th>
+              <th>Relación / Parentesco</th>
+              <th>Fecha Visita</th>
+              <th class="text-end">Control Entrada</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (lista && lista.length > 0) { %>
+              <% lista.forEach(inv => { %>
+                <tr>
+                  <td class="fw-bold"><%= inv.cedula %></td>
+                  <td><%= inv.nombre_completo %></td>
+                  <td><%= inv.nombre_socio %> (<%= inv.cedula_socio %>)</td>
+                  <td><span class="badge bg-secondary"><%= inv.nombre_instalacion || 'Área General' %></span></td>
+                  <td><span class="badge bg-light text-dark border text-capitalize"><%= inv.parentesco_relacion %></span></td>
+                  <td><%= new Date(inv.fecha_visita).toLocaleDateString() %></td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-outline-success py-0 px-3 rounded-pill" onclick="this.className='btn btn-sm btn-success py-0 px-3 rounded-pill'; this.innerText='Ingresado';">
+                      Permitir Acceso
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center text-muted py-5">
+                  No hay invitados registrados para la fecha seleccionada (<%= new Date(fecha).toLocaleDateString() %>).
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../layouts/footer') %>

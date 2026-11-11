@@ -9,6 +9,8 @@ router.get('/dashboard', reservaController.getDashboard);
 router.get('/reservas', reservaController.getMisReservas);
 router.get('/reservar', reservaController.getFormularioReserva);
 router.post('/reservar', reservaController.postCrearReserva);
+router.get('/reservas/editar/:id', reservaController.getEditarReserva);
+router.post('/reservas/editar/:id', reservaController.postEditarReserva);
 router.post('/reservas/cancelar', reservaController.postCancelarReserva);
 
 module.exports = router;
