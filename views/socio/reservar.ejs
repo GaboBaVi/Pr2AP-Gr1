@@ -51,9 +51,13 @@
               <span class="badge bg-secondary mb-2 align-self-start">Paso #2</span>
               <h6 class="fw-bold mb-3">Indicar Fecha, Hora y Aforo</h6>
               
+              <%
+                const hoyCR = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date());
+                const fechaSeleccionada = datosPrevios.fecha || hoyCR;
+              %>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0 fw-bold">Fecha de Reserva</label>
-                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required onchange="cargarHorariosDisponibles()" oninput="cargarHorariosDisponibles()">
+                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= fechaSeleccionada %>" min="<%= hoyCR %>" required onchange="cargarHorariosDisponibles()" oninput="cargarHorariosDisponibles()">
               </div>
 
               <!-- SELECTOR DE HORARIOS DISPONIBLES (SOLO LIBRES) -->
@@ -355,54 +359,58 @@ async function cargarHorariosDisponibles() {
   const inputInicio = document.getElementById('inputHoraInicio');
   const inputFin = document.getElementById('inputHoraFin');
 
-  const instId = selectInst.value;
-  const fecha = inputFecha.value;
+  const instId = selectInst ? selectInst.value : '';
+  const fecha = inputFecha ? inputFecha.value : '';
 
   // Resetear selección
   indicesSeleccionados = [];
-  inputInicio.value = '';
-  inputFin.value = '';
-  cajaResumen.classList.add('d-none');
+  if (inputInicio) inputInicio.value = '';
+  if (inputFin) inputFin.value = '';
+  if (cajaResumen) cajaResumen.classList.add('d-none');
 
   if (!instId || !fecha) {
-    avisoPrevia.classList.remove('d-none');
-    avisoSin.classList.add('d-none');
-    contChips.classList.add('d-none');
+    if (avisoPrevia) avisoPrevia.classList.remove('d-none');
+    if (avisoSin) avisoSin.classList.add('d-none');
+    if (contChips) contChips.classList.add('d-none');
     return;
   }
 
-  avisoPrevia.classList.add('d-none');
-  avisoSin.classList.add('d-none');
-  contChips.classList.add('d-none');
-  spinner.classList.remove('d-none');
+  if (avisoPrevia) avisoPrevia.classList.add('d-none');
+  if (avisoSin) avisoSin.classList.add('d-none');
+  if (contChips) contChips.classList.add('d-none');
+  if (spinner) spinner.classList.remove('d-none');
 
   try {
     const res = await fetch(`/socio/reservas/disponibilidad-horaria?instalacion_id=${instId}&fecha=${fecha}`);
     const data = await res.json();
-    spinner.classList.add('d-none');
+    if (spinner) spinner.classList.add('d-none');
 
     if (!data.disponible || !data.slots || data.slots.length === 0) {
-      avisoSin.textContent = data.motivo || 'No hay horarios disponibles para esta fecha (horas pasadas, reservadas o en mantenimiento).';
-      avisoSin.classList.remove('d-none');
-      contChips.classList.add('d-none');
+      if (avisoSin) {
+        avisoSin.textContent = data.motivo || 'No hay horarios disponibles para esta fecha (horas pasadas, reservadas o en mantenimiento).';
+        avisoSin.classList.remove('d-none');
+      }
+      if (contChips) contChips.classList.add('d-none');
       slotsDisponibles = [];
       return;
     }
 
     slotsDisponibles = data.slots;
-    contChips.innerHTML = '';
-    contChips.classList.remove('d-none');
+    if (contChips) {
+      contChips.innerHTML = '';
+      contChips.classList.remove('d-none');
 
-    slotsDisponibles.forEach((slot, index) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-sm chip-horario py-1 px-2 text-start';
-      btn.style.fontSize = '0.78rem';
-      btn.style.borderRadius = '6px';
-      btn.innerHTML = `<i class="bi bi-clock me-1"></i> ${slot.label}`;
-      btn.onclick = () => manejarClickSlot(index);
-      contChips.appendChild(btn);
-    });
+      slotsDisponibles.forEach((slot, index) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm chip-horario py-1 px-2 text-start';
+        btn.style.fontSize = '0.78rem';
+        btn.style.borderRadius = '6px';
+        btn.innerHTML = `<i class="bi bi-clock me-1"></i> ${slot.label}`;
+        btn.onclick = () => manejarClickSlot(index);
+        contChips.appendChild(btn);
+      });
+    }
 
     // Si había horas previas por error de validación, intentar restaurar selección
     const horaInicioPrevia = "<%= datosPrevios.hora_inicio || '' %>";
@@ -411,9 +419,11 @@ async function cargarHorariosDisponibles() {
       preseleccionarRango(horaInicioPrevia, horaFinPrevia);
     }
   } catch (err) {
-    spinner.classList.add('d-none');
-    avisoSin.textContent = 'Error al consultar disponibilidad de horarios.';
-    avisoSin.classList.remove('d-none');
+    if (spinner) spinner.classList.add('d-none');
+    if (avisoSin) {
+      avisoSin.textContent = 'Error al consultar disponibilidad de horarios.';
+      avisoSin.classList.remove('d-none');
+    }
     console.error(err);
   }
 }
@@ -656,6 +666,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (inputFecha) {
     const hoy = obtenerFechaHoy();
     inputFecha.min = hoy;
+    if (!inputFecha.value) {
+      inputFecha.value = hoy;
+    }
     inputFecha.addEventListener('change', cargarHorariosDisponibles);
     inputFecha.addEventListener('input', cargarHorariosDisponibles);
   }
