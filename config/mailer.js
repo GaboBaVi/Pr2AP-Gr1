@@ -2,9 +2,7 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT, 10) || 587,
-  secure: false, // true para puerto 465, false para otros
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
@@ -14,7 +12,7 @@ const transporter = nodemailer.createTransport({
 async function enviarCorreo({ para, asunto, html }) {
   try {
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.warn('Credenciales de correo no configuradas. Simulando envio a:', para);
+      console.warn('Credenciales de correo no configuradas. Simulando envío a:', para);
       return { exito: true, simulado: true };
     }
     const info = await transporter.sendMail({
@@ -23,9 +21,10 @@ async function enviarCorreo({ para, asunto, html }) {
       subject: asunto,
       html: html
     });
+    console.log(`✔ Correo enviado exitosamente a ${para} (MessageId: ${info.messageId})`);
     return { exito: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error enviando correo:', error);
+    console.error('Error enviando correo con Nodemailer:', error);
     return { exito: false, error };
   }
 }
