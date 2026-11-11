@@ -158,3 +158,86 @@ footer {
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+/* ==========================================================================
+   ESTILOS DE SELECCIÓN Y CONTRASTE (SIN TONOS AZULES DIFÍCILES DE LEER)
+   ========================================================================== */
+
+/* 1. Selección de texto global: fondo gris claro con texto oscuro nítido */
+::selection {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+::-moz-selection {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* 2. Pestañas / Nav-pills activas */
+.nav-pills .nav-link {
+  color: #475569 !important;
+  border-radius: 8px !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all 0.15s ease;
+}
+
+.nav-pills .nav-link:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  background-color: #e2e8f0 !important; /* Gris claro */
+  color: #0f172a !important;            /* Texto oscuro y legible */
+  border: 1px solid #94a3b8 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 3. Checkboxes y Radio buttons */
+.form-check-input:checked {
+  background-color: #475569 !important;
+  border-color: #475569 !important;
+}
+
+.form-check-input:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 0.2rem rgba(148, 163, 184, 0.25) !important;
+}
+
+/* 4. Enfoque de formularios e inputs */
+.form-control:focus,
+.form-select:focus,
+.form-control-custom:focus {
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 0.2rem rgba(148, 163, 184, 0.25) !important;
+  outline: none;
+}
+
+/* 5. Chips de Horarios en Reservas */
+.chip-horario {
+  background-color: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.chip-horario:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.chip-horario.chip-horario-seleccionado {
+  background-color: #e2e8f0 !important; /* Gris claro */
+  color: #0f172a !important;            /* Texto oscuro fácil de leer */
+  border: 2px solid #64748b !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+

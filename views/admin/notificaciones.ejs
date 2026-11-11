@@ -34,7 +34,7 @@
       <ul class="nav nav-pills mb-4 nav-fill flex-wrap gap-1" id="templatesTab" role="tablist">
         <% plantillas.forEach((p, idx) => { %>
           <li class="nav-item" role="presentation">
-            <button class="nav-link <%= idx === 0 ? 'active bg-dark' : 'text-dark' %>" 
+            <button class="nav-link <%= idx === 0 ? 'active' : '' %>" 
                     id="tab-<%= p.clave %>" 
                     data-bs-toggle="pill" 
                     data-bs-target="#pane-<%= p.clave %>" 

@@ -316,7 +316,7 @@ async function cargarHorariosDisponibles() {
     slotsDisponibles.forEach((slot, index) => {
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'btn btn-sm btn-outline-dark chip-horario py-1 px-2 text-start';
+      btn.className = 'btn btn-sm chip-horario py-1 px-2 text-start';
       btn.style.fontSize = '0.78rem';
       btn.style.borderRadius = '6px';
       btn.innerHTML = `<i class="bi bi-clock me-1"></i> ${slot.label}`;
@@ -399,9 +399,9 @@ function actualizarUISeleccionHorarios() {
 
   chips.forEach((chip, idx) => {
     if (indicesSeleccionados.includes(idx)) {
-      chip.className = 'btn btn-sm btn-dark text-white chip-horario py-1 px-2 text-start';
+      chip.className = 'btn btn-sm chip-horario chip-horario-seleccionado py-1 px-2 text-start';
     } else {
-      chip.className = 'btn btn-sm btn-outline-dark chip-horario py-1 px-2 text-start';
+      chip.className = 'btn btn-sm chip-horario py-1 px-2 text-start';
     }
   });
 

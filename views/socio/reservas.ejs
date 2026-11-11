@@ -25,13 +25,13 @@
       <!-- PESTAÑAS -->
       <ul class="nav nav-pills mb-4 nav-fill">
         <li class="nav-item">
-          <a class="nav-link <%= estadoActual === 'activa' ? 'active bg-dark' : 'text-dark' %>" href="/socio/reservas?estado=activa">Activas</a>
+          <a class="nav-link <%= estadoActual === 'activa' ? 'active' : '' %>" href="/socio/reservas?estado=activa">Activas</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <%= estadoActual === 'finalizada' ? 'active bg-dark' : 'text-dark' %>" href="/socio/reservas?estado=finalizada">Finalizadas</a>
+          <a class="nav-link <%= estadoActual === 'finalizada' ? 'active' : '' %>" href="/socio/reservas?estado=finalizada">Finalizadas</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <%= estadoActual === 'cancelada' ? 'active bg-dark' : 'text-dark' %>" href="/socio/reservas?estado=cancelada">Canceladas</a>
+          <a class="nav-link <%= estadoActual === 'cancelada' ? 'active' : '' %>" href="/socio/reservas?estado=cancelada">Canceladas</a>
         </li>
       </ul>
 
