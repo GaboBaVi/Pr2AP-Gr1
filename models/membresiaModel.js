@@ -67,6 +67,27 @@ const Membresia = {
       [membresia_id, cedula, nombre_completo, parentesco, fecha_nacimiento]
     );
     return res.rows[0];
+  },
+
+  async actualizarBeneficiario(id, membresiaId, { cedula, nombre_completo, parentesco, fecha_nacimiento }) {
+    const res = await db.query(
+      `UPDATE beneficiarios 
+       SET cedula = $1, nombre_completo = $2, parentesco = $3, fecha_nacimiento = $4
+       WHERE id = $5 AND membresia_id = $6
+       RETURNING *`,
+      [cedula, nombre_completo, parentesco, fecha_nacimiento, id, membresiaId]
+    );
+    return res.rows[0];
+  },
+
+  async eliminarBeneficiario(id, membresiaId) {
+    const res = await db.query(
+      `DELETE FROM beneficiarios 
+       WHERE id = $1 AND membresia_id = $2
+       RETURNING *`,
+      [id, membresiaId]
+    );
+    return res.rows[0];
   }
 };
 

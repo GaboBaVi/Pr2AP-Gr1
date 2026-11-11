@@ -18,5 +18,7 @@ router.get('/logout', authController.logout);
 router.get('/perfil', estaAutenticado, esSocio, authController.getPerfil);
 router.post('/perfil/editar', estaAutenticado, esSocio, authController.postEditarPerfil);
 router.post('/perfil/beneficiarios', estaAutenticado, esSocio, authController.postAgregarBeneficiario);
+router.post('/perfil/beneficiarios/editar', estaAutenticado, esSocio, authController.postEditarBeneficiario);
+router.post('/perfil/beneficiarios/eliminar', estaAutenticado, esSocio, authController.postEliminarBeneficiario);
 
 module.exports = router;

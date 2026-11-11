@@ -259,6 +259,57 @@ const authController = {
     }
   },
 
+  async postEditarBeneficiario(req, res) {
+    try {
+      const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
+      if (!membresia) {
+        return res.redirect('/auth/perfil');
+      }
+
+      const { id, cedula, nombre_completo, parentesco, fecha_nacimiento } = req.body;
+      const actualizado = await Membresia.actualizarBeneficiario(id, membresia.id, {
+        cedula: cedula.trim(),
+        nombre_completo: nombre_completo.trim(),
+        parentesco,
+        fecha_nacimiento
+      });
+
+      if (actualizado) {
+        req.session.mensajePerfil = 'Información del beneficiario actualizada con éxito.';
+      } else {
+        req.session.mensajePerfil = 'No se encontró el beneficiario para actualizar.';
+      }
+      res.redirect('/auth/perfil');
+    } catch (err) {
+      console.error('Error en postEditarBeneficiario:', err);
+      req.session.mensajePerfil = 'Error interno al actualizar el beneficiario.';
+      res.redirect('/auth/perfil');
+    }
+  },
+
+  async postEliminarBeneficiario(req, res) {
+    try {
+      const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
+      if (!membresia) {
+        return res.redirect('/auth/perfil');
+      }
+
+      const { id } = req.body;
+      const eliminado = await Membresia.eliminarBeneficiario(id, membresia.id);
+
+      if (eliminado) {
+        req.session.mensajePerfil = 'Beneficiario retirado de la membresía con éxito.';
+      } else {
+        req.session.mensajePerfil = 'No se pudo retirar el beneficiario.';
+      }
+      res.redirect('/auth/perfil');
+    } catch (err) {
+      console.error('Error en postEliminarBeneficiario:', err);
+      req.session.mensajePerfil = 'Error interno al eliminar el beneficiario.';
+      res.redirect('/auth/perfil');
+    }
+  },
+
   logout(req, res) {
     req.session.destroy(() => {
       res.redirect('/');

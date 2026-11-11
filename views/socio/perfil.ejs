@@ -99,9 +99,30 @@
       <% if (beneficiarios && beneficiarios.length > 0) { %>
         <ul class="list-group list-group-flush small">
           <% beneficiarios.forEach(b => { %>
-            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
-              <span><%= b.nombre_completo %> (<%= b.parentesco %>)</span>
-              <span class="text-muted"><%= b.cedula %></span>
+            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+              <div>
+                <span class="fw-semibold text-dark"><%= b.nombre_completo %></span>
+                <span class="badge bg-light text-dark border ms-1"><%= b.parentesco %></span>
+                <span class="text-muted d-block small">
+                  Cédula: <%= b.cedula %>
+                  <% if (b.fecha_nacimiento) { %>
+                    &bull; Nacimiento: <%= new Date(b.fecha_nacimiento).toLocaleDateString() %>
+                  <% } %>
+                </span>
+              </div>
+              <div class="d-flex align-items-center gap-1">
+                <!-- Botón Editar -->
+                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="modal" data-bs-target="#modalEditarBeneficiario<%= b.id %>" title="Editar información">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <!-- Botón Quitar de la lista -->
+                <form action="/auth/perfil/beneficiarios/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas quitar a <%= b.nombre_completo %> de la lista de beneficiarios?');">
+                  <input type="hidden" name="id" value="<%= b.id %>">
+                  <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Quitar beneficiario">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </div>
             </li>
           <% }) %>
         </ul>
@@ -205,5 +226,51 @@
     </div>
   </div>
 </div>
+
+<!-- MODALES PARA EDITAR CADA BENEFICIARIO -->
+<% if (beneficiarios && beneficiarios.length > 0) { %>
+  <% beneficiarios.forEach(b => { %>
+    <div class="modal fade" id="modalEditarBeneficiario<%= b.id %>" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content custom-card p-3">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">Editar Información de Beneficiario</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form action="/auth/perfil/beneficiarios/editar" method="POST">
+            <input type="hidden" name="id" value="<%= b.id %>">
+            <div class="modal-body border-0">
+              <div class="mb-3">
+                <label class="form-label small text-muted">Nombre Completo</label>
+                <input type="text" name="nombre_completo" class="form-control form-control-custom" value="<%= b.nombre_completo %>" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Cédula</label>
+                <input type="text" name="cedula" class="form-control form-control-custom" value="<%= b.cedula %>" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$" title="Cédula válida de 9 dígitos (ej. 1-1234-0567)" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Parentesco</label>
+                <select name="parentesco" class="form-select form-control-custom" required>
+                  <option value="Hijo(a)" <%= b.parentesco === 'Hijo(a)' ? 'selected' : '' %>>Hijo(a)</option>
+                  <option value="Cónyuge" <%= b.parentesco === 'Cónyuge' ? 'selected' : '' %>>Cónyuge</option>
+                  <option value="Padre/Madre" <%= b.parentesco === 'Padre/Madre' ? 'selected' : '' %>>Padre/Madre</option>
+                  <option value="Otro" <%= b.parentesco === 'Otro' ? 'selected' : '' %>>Otro</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small text-muted">Fecha de Nacimiento</label>
+                <input type="date" name="fecha_nacimiento" class="form-control form-control-custom" value="<%= b.fecha_nacimiento ? new Date(b.fecha_nacimiento).toISOString().split('T')[0] : '' %>" required>
+              </div>
+            </div>
+            <div class="modal-footer border-0">
+              <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn-dark-pill">Guardar Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+<% } %>
 
 <%- include('../layouts/footer') %>
