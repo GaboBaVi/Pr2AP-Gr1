@@ -39,6 +39,29 @@ const Reserva = {
   },
 
   async verificarDisponibilidad(instalacionId, fecha, horaInicio, horaFin, idExcluir = null) {
+    const minutosInicio = horaEnMinutos(horaInicio);
+    const minutosFin = horaEnMinutos(horaFin);
+
+    // 0. Validar que la fecha y hora no pertenezcan al pasado (Zona Horaria Costa Rica)
+    const ahora = new Date();
+    const hoyStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(ahora); // YYYY-MM-DD
+    const horaActualCR = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Costa_Rica', hour: '2-digit', minute: '2-digit', hour12: false }).format(ahora); // HH:mm
+    const minutosActuales = horaEnMinutos(horaActualCR);
+
+    if (fecha < hoyStr) {
+      return { 
+        disponible: false, 
+        motivo: 'No es posible realizar o modificar una reserva en una fecha pasada.' 
+      };
+    }
+
+    if (fecha === hoyStr && minutosInicio <= minutosActuales) {
+      return { 
+        disponible: false, 
+        motivo: `La hora de inicio (${horaInicio}) ya ha transcurrido el día de hoy. Por favor selecciona una hora posterior a las ${horaActualCR}.` 
+      };
+    }
+
     // 1. Verificar si la instalación está bloqueada por mantenimiento
     const inst = await db.query('SELECT * FROM instalaciones WHERE id = $1', [instalacionId]);
     if (!inst.rows[0] || inst.rows[0].bloqueada_mantenimiento) {
@@ -48,8 +71,6 @@ const Reserva = {
       };
     }
 
-    const minutosInicio = horaEnMinutos(horaInicio);
-    const minutosFin = horaEnMinutos(horaFin);
     const aperturaMin = horaEnMinutos(inst.rows[0].hora_apertura);
     const cierreMin = horaEnMinutos(inst.rows[0].hora_cierre);
 

@@ -53,7 +53,7 @@
               <h6 class="fw-bold mb-3">Indicar Fecha, Hora y Aforo</h6>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0">Fecha de Reserva</label>
-                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required>
+                <input type="date" name="fecha" id="inputFecha" class="form-control form-control-custom" value="<%= datosPrevios.fecha || '' %>" required onchange="validarFechaYHoras()">
               </div>
               <div class="mb-2">
                 <label class="form-label small text-muted mb-0">Hora de Inicio</label>
@@ -153,6 +153,33 @@
 </div>
 
 <script>
+function obtenerFechaHoy() {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+function obtenerHoraActual() {
+  const ahora = new Date();
+  const horas = String(ahora.getHours()).padStart(2, '0');
+  const minutos = String(ahora.getMinutes()).padStart(2, '0');
+  return `${horas}:${minutos}`;
+}
+
+function validarFechaYHoras() {
+  const inputFecha = document.getElementById('inputFecha');
+  const inputHoraInicio = document.getElementById('inputHoraInicio');
+  const hoy = obtenerFechaHoy();
+
+  if (inputFecha.value === hoy) {
+    const horaActual = obtenerHoraActual();
+    // Si la fecha es hoy, la hora de inicio minima es la hora actual
+    inputHoraInicio.min = horaActual;
+  }
+}
+
 function actualizarDetallesInstalacion() {
   const select = document.getElementById('selectInstalacion');
   const selectedOption = select.options[select.selectedIndex];
@@ -178,6 +205,8 @@ function actualizarDetallesInstalacion() {
     document.getElementById('inputHoraFin').min = apertura;
     document.getElementById('inputHoraFin').max = cierre;
 
+    validarFechaYHoras();
+
     // Mostrar solo servicios de esta instalacion
     const instId = selectedOption.value;
     sinServicios.classList.add('d-none');
@@ -196,8 +225,38 @@ function actualizarDetallesInstalacion() {
   }
 }
 
-// Ejecutar al cargar por si habian datos previos
+// Validacion estricta al enviar el formulario
+document.getElementById('formReserva').addEventListener('submit', function(e) {
+  const inputFecha = document.getElementById('inputFecha');
+  const inputHoraInicio = document.getElementById('inputHoraInicio');
+  const inputHoraFin = document.getElementById('inputHoraFin');
+  const hoy = obtenerFechaHoy();
+  const horaActual = obtenerHoraActual();
+
+  if (inputFecha.value < hoy) {
+    e.preventDefault();
+    alert('No puedes seleccionar una fecha pasada.');
+    return;
+  }
+
+  if (inputFecha.value === hoy && inputHoraInicio.value <= horaActual) {
+    e.preventDefault();
+    alert(`La hora de inicio (${inputHoraInicio.value}) ya ha transcurrido. Por favor selecciona una hora posterior a las ${horaActual}.`);
+    return;
+  }
+
+  if (inputHoraInicio.value >= inputHoraFin.value) {
+    e.preventDefault();
+    alert('La hora de inicio debe ser anterior a la hora de finalización.');
+    return;
+  }
+});
+
+// Ejecutar al cargar
 document.addEventListener('DOMContentLoaded', () => {
+  const inputFecha = document.getElementById('inputFecha');
+  const hoy = obtenerFechaHoy();
+  inputFecha.min = hoy; // Impedir seleccionar fechas pasadas en el calendario del navegador
   actualizarDetallesInstalacion();
 });
 </script>

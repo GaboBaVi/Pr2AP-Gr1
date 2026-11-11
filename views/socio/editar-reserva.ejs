@@ -37,15 +37,15 @@
           <!-- FECHA Y HORARIO -->
           <div class="col-md-4">
             <label class="form-label small fw-bold text-muted">Fecha</label>
-            <input type="date" name="fecha" class="form-control form-control-custom" value="<%= new Date(reserva.fecha).toISOString().split('T')[0] %>" required>
+            <input type="date" name="fecha" id="editFecha" class="form-control form-control-custom" value="<%= new Date(reserva.fecha).toISOString().split('T')[0] %>" required>
           </div>
           <div class="col-md-4">
             <label class="form-label small fw-bold text-muted">Hora de Inicio</label>
-            <input type="time" name="hora_inicio" class="form-control form-control-custom" value="<%= reserva.hora_inicio.slice(0,5) %>" required>
+            <input type="time" name="hora_inicio" id="editHoraInicio" class="form-control form-control-custom" value="<%= reserva.hora_inicio.slice(0,5) %>" required>
           </div>
           <div class="col-md-4">
             <label class="form-label small fw-bold text-muted">Hora de Fin</label>
-            <input type="time" name="hora_fin" class="form-control form-control-custom" value="<%= reserva.hora_fin.slice(0,5) %>" required>
+            <input type="time" name="hora_fin" id="editHoraFin" class="form-control form-control-custom" value="<%= reserva.hora_fin.slice(0,5) %>" required>
           </div>
 
           <!-- NUMERO DE PERSONAS -->
@@ -114,13 +114,35 @@
 </div>
 
 <script>
+function obtenerFechaHoy() {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+}
+
+function obtenerHoraActual() {
+  const ahora = new Date();
+  const horas = String(ahora.getHours()).padStart(2, '0');
+  const minutos = String(ahora.getMinutes()).padStart(2, '0');
+  return `${horas}:${minutos}`;
+}
+
 function actualizarServiciosEdit() {
   const select = document.getElementById('editInstalacion');
   const selectedOption = select.options[select.selectedIndex];
   if (selectedOption) {
     const instId = selectedOption.value;
     const aforo = selectedOption.getAttribute('data-aforo');
+    const apertura = selectedOption.getAttribute('data-apertura');
+    const cierre = selectedOption.getAttribute('data-cierre');
+
     document.getElementById('editNumPersonas').max = aforo;
+    document.getElementById('editHoraInicio').min = apertura;
+    document.getElementById('editHoraInicio').max = cierre;
+    document.getElementById('editHoraFin').min = apertura;
+    document.getElementById('editHoraFin').max = cierre;
 
     document.querySelectorAll('.edit-servicio').forEach(div => {
       if (div.getAttribute('data-inst') === instId) {
@@ -132,7 +154,38 @@ function actualizarServiciosEdit() {
     });
   }
 }
-document.addEventListener('DOMContentLoaded', actualizarServiciosEdit);
+
+document.querySelector('form').addEventListener('submit', function(e) {
+  const inputFecha = document.getElementById('editFecha');
+  const inputHoraInicio = document.getElementById('editHoraInicio');
+  const inputHoraFin = document.getElementById('editHoraFin');
+  const hoy = obtenerFechaHoy();
+  const horaActual = obtenerHoraActual();
+
+  if (inputFecha.value < hoy) {
+    e.preventDefault();
+    alert('No puedes seleccionar una fecha pasada.');
+    return;
+  }
+
+  if (inputFecha.value === hoy && inputHoraInicio.value <= horaActual) {
+    e.preventDefault();
+    alert(`La hora de inicio (${inputHoraInicio.value}) ya ha transcurrido. Por favor selecciona una hora posterior a las ${horaActual}.`);
+    return;
+  }
+
+  if (inputHoraInicio.value >= inputHoraFin.value) {
+    e.preventDefault();
+    alert('La hora de inicio debe ser anterior a la hora de finalización.');
+    return;
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const inputFecha = document.getElementById('editFecha');
+  inputFecha.min = obtenerFechaHoy();
+  actualizarServiciosEdit();
+});
 </script>
 
 <%- include('../layouts/footer') %>
