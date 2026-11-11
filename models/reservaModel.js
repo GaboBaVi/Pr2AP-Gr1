@@ -69,23 +69,27 @@ const Reserva = {
     }
     const instData = inst.rows[0];
     if (instData.bloqueada_mantenimiento) {
-      if (instData.mantenimiento_tipo === 'horas' && instData.mantenimiento_hora_inicio && instData.mantenimiento_hora_fin) {
-        const mInicioMin = horaEnMinutos(instData.mantenimiento_hora_inicio);
-        const mFinMin = horaEnMinutos(instData.mantenimiento_hora_fin);
-        const fechaInstStr = instData.mantenimiento_fecha ? new Date(instData.mantenimiento_fecha).toISOString().split('T')[0] : null;
-        if (!fechaInstStr || fechaInstStr === fecha) {
+      const fechaInstStr = instData.mantenimiento_fecha 
+        ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(instData.mantenimiento_fecha))
+        : null;
+
+      // Solo aplica si coincide con la fecha seleccionada
+      if (!fechaInstStr || fechaInstStr === fecha) {
+        if (instData.mantenimiento_tipo === 'horas' && instData.mantenimiento_hora_inicio && instData.mantenimiento_hora_fin) {
+          const mInicioMin = horaEnMinutos(instData.mantenimiento_hora_inicio);
+          const mFinMin = horaEnMinutos(instData.mantenimiento_hora_fin);
           if (minutosInicio < mFinMin && minutosFin > mInicioMin) {
             return {
               disponible: false,
-              motivo: `La instalación ${instData.nombre} se encuentra en mantenimiento en el horario de ${instData.mantenimiento_hora_inicio.slice(0,5)} a ${instData.mantenimiento_hora_fin.slice(0,5)}.`
+              motivo: `La instalación ${instData.nombre} se encuentra en mantenimiento en el horario de ${instData.mantenimiento_hora_inicio.slice(0,5)} a ${instData.mantenimiento_hora_fin.slice(0,5)} para la fecha seleccionada.`
             };
           }
+        } else {
+          return { 
+            disponible: false, 
+            motivo: `La instalación ${instData.nombre} está bloqueada por mantenimiento durante todo el día para la fecha seleccionada.` 
+          };
         }
-      } else {
-        return { 
-          disponible: false, 
-          motivo: `La instalación ${instData.nombre} está bloqueada por mantenimiento durante todo el día.` 
-        };
       }
     }
 

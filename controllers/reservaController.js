@@ -87,14 +87,21 @@ const reservaController = {
         return res.json({ disponible: false, slots: [], motivo: 'La fecha seleccionada ya pasó.' });
       }
 
-      // Mantenimiento todo el día
+      const fechaConsultaStr = fecha;
+      const fechaInstStr = inst.mantenimiento_fecha 
+        ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(inst.mantenimiento_fecha))
+        : null;
+
+      // Mantenimiento todo el día SOLO para la fecha bloqueada
       if (inst.bloqueada_mantenimiento) {
-        if (!inst.mantenimiento_tipo || inst.mantenimiento_tipo === 'todo_el_dia') {
-          return res.json({
-            disponible: false,
-            bloqueada_total: true,
-            motivo: `La instalación ${inst.nombre} está bloqueada por mantenimiento durante todo el día.`
-          });
+        if (!fechaInstStr || fechaInstStr === fechaConsultaStr) {
+          if (!inst.mantenimiento_tipo || inst.mantenimiento_tipo === 'todo_el_dia') {
+            return res.json({
+              disponible: false,
+              bloqueada_total: true,
+              motivo: `La instalación ${inst.nombre} se encuentra en mantenimiento durante todo el día para la fecha seleccionada (${inst.motivo_bloqueo || 'Mantenimiento preventivo'}). Por favor selecciona otra fecha.`
+            });
+          }
         }
       }
 
@@ -117,8 +124,6 @@ const reservaController = {
       const horaActualMinutos = horaEnMinutos(horaCR);
 
       const slotsDisponibles = [];
-      const fechaConsultaStr = new Date(fecha).toISOString().split('T')[0];
-      const fechaInstStr = inst.mantenimiento_fecha ? new Date(inst.mantenimiento_fecha).toISOString().split('T')[0] : null;
 
       for (let h = horaAperturaNum; h < horaCierreNum; h++) {
         const hInicioStr = (h < 10 ? '0' : '') + h + ':00';
@@ -131,7 +136,7 @@ const reservaController = {
           continue; // Ya pasó: no sale
         }
 
-        // Validar mantenimiento por horas
+        // Validar mantenimiento por horas (solo si coincide la fecha)
         if (inst.bloqueada_mantenimiento && inst.mantenimiento_tipo === 'horas') {
           if (!fechaInstStr || fechaInstStr === fechaConsultaStr) {
             const mInicioMin = horaEnMinutos(inst.mantenimiento_hora_inicio);

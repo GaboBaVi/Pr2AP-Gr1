@@ -30,9 +30,8 @@
                             data-aforo="<%= inst.aforo_maximo %>" 
                             data-apertura="<%= inst.hora_apertura.slice(0,5) %>" 
                             data-cierre="<%= inst.hora_cierre.slice(0,5) %>"
-                            <%= String(datosPrevios.instalacion_id) === String(inst.id) ? 'selected' : '' %>
-                            <%= inst.bloqueada_mantenimiento ? 'disabled' : '' %>>
-                      <%= inst.nombre %> <%= inst.bloqueada_mantenimiento ? '(Bloqueada por Mantenimiento)' : '' %>
+                            <%= String(datosPrevios.instalacion_id) === String(inst.id) ? 'selected' : '' %>>
+                      <%= inst.nombre %>
                     </option>
                   <% }) %>
                 </select>

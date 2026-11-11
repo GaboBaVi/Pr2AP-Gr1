@@ -26,9 +26,8 @@
                         data-aforo="<%= inst.aforo_maximo %>"
                         data-apertura="<%= inst.hora_apertura.slice(0,5) %>"
                         data-cierre="<%= inst.hora_cierre.slice(0,5) %>"
-                        <%= inst.id === reserva.instalacion_id ? 'selected' : '' %> 
-                        <%= inst.bloqueada_mantenimiento ? 'disabled' : '' %>>
-                  <%= inst.nombre %> (Aforo máx: <%= inst.aforo_maximo %> personas) <%= inst.bloqueada_mantenimiento ? '[BLOQUEADA]' : '' %>
+                        <%= inst.id === reserva.instalacion_id ? 'selected' : '' %>>
+                  <%= inst.nombre %> (Aforo máx: <%= inst.aforo_maximo %> personas)
                 </option>
               <% }) %>
             </select>
