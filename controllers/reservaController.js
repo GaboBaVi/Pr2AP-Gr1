@@ -129,10 +129,8 @@ const reservaController = {
         }
       }
 
-      // 7. Actualizar el estado de cuenta del socio si hubo servicios
-      if (totalServicios > 0) {
-        await Cobro.agregarCargosServicio(req.session.usuario.id, totalServicios);
-      }
+      // 7. Actualizar el estado de cuenta del socio recalculando cargos reales
+      await Cobro.recalcularCargosMes(req.session.usuario.id);
 
       // 8. Registrar invitado si fue ingresado (Paso #4)
       if (invitado_cedula && invitado_nombre && invitado_nombre.trim()) {
@@ -268,12 +266,8 @@ const reservaController = {
         }
       }
 
-      // 6. Ajustar estado de cuenta
-      if (diferenciaCargos > 0) {
-        await Cobro.agregarCargosServicio(req.session.usuario.id, diferenciaCargos);
-      } else if (diferenciaCargos < 0) {
-        await Cobro.descontarCargosServicio(req.session.usuario.id, Math.abs(diferenciaCargos));
-      }
+      // 6. Ajustar estado de cuenta recalculando cargos reales
+      await Cobro.recalcularCargosMes(req.session.usuario.id);
 
       req.session.mensajeReserva = 'Tu reserva ha sido modificada y actualizada exitosamente.';
       res.redirect('/socio/reservas');
@@ -291,10 +285,8 @@ const reservaController = {
       const cancelada = await Reserva.cancelar(id, req.session.usuario.id);
 
       if (cancelada) {
-        // Descontar cobro de servicios adicionales si los tenía
-        if (Number(reserva.costo_servicios) > 0) {
-          await Cobro.descontarCargosServicio(req.session.usuario.id, Number(reserva.costo_servicios));
-        }
+        // Descontar cobro de servicios adicionales recalculando el mes
+        await Cobro.recalcularCargosMes(req.session.usuario.id);
 
         // Enviar correo de cancelación
         const plantilla = await Notificacion.obtenerPlantilla('reserva_cancelada');

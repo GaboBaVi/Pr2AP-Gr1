@@ -139,10 +139,8 @@ const adminController = {
         const plantilla = await Notificacion.obtenerPlantilla('mantenimiento_cancelacion');
 
         for (const r of afectadas) {
-          // Descontar cobro si tenía servicios adicionales
-          if (Number(r.costo_servicios) > 0) {
-            await Cobro.descontarCargosServicio(r.usuario_id, Number(r.costo_servicios));
-          }
+          // Descontar cobro si tenía servicios adicionales recalculando el mes
+          await Cobro.recalcularCargosMes(r.usuario_id);
 
           // Enviar correo de cancelación por mantenimiento
           if (plantilla) {

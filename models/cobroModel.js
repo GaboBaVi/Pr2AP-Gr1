@@ -90,6 +90,34 @@ const Cobro = {
         [monto, actual.id]
       );
     }
+  },
+
+  async recalcularCargosMes(usuarioId) {
+    try {
+      const resReservas = await db.query(
+        `SELECT COALESCE(SUM(costo_servicios), 0) as total
+         FROM reservas 
+         WHERE usuario_id = $1 
+           AND estado != 'cancelada'
+           AND EXTRACT(MONTH FROM fecha) = EXTRACT(MONTH FROM CURRENT_DATE)
+           AND EXTRACT(YEAR FROM fecha) = EXTRACT(YEAR FROM CURRENT_DATE)`,
+        [usuarioId]
+      );
+      const totalServicios = parseFloat(resReservas.rows[0].total) || 0;
+
+      const actual = await this.obtenerEstadoActual(usuarioId);
+      if (actual && actual.estado === 'pendiente') {
+        await db.query(
+          `UPDATE estados_cuenta 
+           SET cargos_servicios = $1,
+               total_pagar = cuota_membresia + $1
+           WHERE id = $2`,
+          [totalServicios, actual.id]
+        );
+      }
+    } catch (err) {
+      console.error('Error al recalcular cargos de servicios:', err);
+    }
   }
 };
 
