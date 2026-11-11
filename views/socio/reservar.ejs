@@ -147,22 +147,49 @@
 
           <!-- PASO 4: REGISTRO DE INVITADO -->
           <div class="col-md-3">
-            <div class="border rounded-4 p-3 bg-white h-100">
-              <span class="badge bg-secondary mb-2">Paso #4</span>
-              <h6 class="fw-bold mb-2">Registro de Invitado</h6>
-              <p class="small text-muted mb-3">(Acompañante externo)</p>
+            <div class="border rounded-4 p-3 bg-white h-100 d-flex flex-column">
+              <span class="badge bg-secondary mb-2 align-self-start">Paso #4</span>
+              <h6 class="fw-bold mb-1">Registro de Invitados</h6>
+              <p class="small text-muted mb-2">(Acompañantes externos)</p>
 
-              <div class="mb-2">
-                <input type="text" name="invitado_nombre" class="form-control form-control-custom" placeholder="Nombre acompañante" value="<%= datosPrevios.invitado_nombre || '' %>">
+              <!-- CONTENEDOR DINÁMICO DE FILAS DE INVITADOS -->
+              <div id="contenedorInvitados" class="d-flex flex-column gap-2 mb-2" style="max-height: 250px; overflow-y: auto;">
+                <% 
+                  const prevNombres = Array.isArray(datosPrevios.invitado_nombre) ? datosPrevios.invitado_nombre : (datosPrevios.invitado_nombre ? [datosPrevios.invitado_nombre] : ['']);
+                  const prevCedulas = Array.isArray(datosPrevios.invitado_cedula) ? datosPrevios.invitado_cedula : (datosPrevios.invitado_cedula ? [datosPrevios.invitado_cedula] : ['']);
+                  const prevParen = Array.isArray(datosPrevios.invitado_parentesco) ? datosPrevios.invitado_parentesco : (datosPrevios.invitado_parentesco ? [datosPrevios.invitado_parentesco] : ['']);
+                  const totalPrev = Math.max(1, prevNombres.length);
+                %>
+                <% for (let i = 0; i < totalPrev; i++) { %>
+                  <div class="bloque-invitado border rounded-3 p-2 bg-light position-relative" id="bloqueInvitado<%= i + 1 %>">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="fw-bold text-muted" style="font-size: 0.75rem;">Invitado #<%= i + 1 %></span>
+                      <% if (i > 0) { %>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="eliminarFilaInvitado('bloqueInvitado<%= i + 1 %>')" title="Quitar este invitado">
+                          <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                      <% } %>
+                    </div>
+                    <div class="mb-1">
+                      <input type="text" name="invitado_nombre" class="form-control form-control-custom form-control-sm" placeholder="Nombre completo" value="<%= prevNombres[i] || '' %>">
+                    </div>
+                    <div class="mb-1">
+                      <input type="text" name="invitado_cedula" class="form-control form-control-custom form-control-sm" placeholder="Cédula (ej. 1-1234-0567)" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})?$" title="Formato: 9 dígitos costarricense" value="<%= prevCedulas[i] || '' %>">
+                    </div>
+                    <div>
+                      <input type="text" name="invitado_parentesco" class="form-control form-control-custom form-control-sm" placeholder="Parentesco o Relación" value="<%= prevParen[i] || '' %>">
+                    </div>
+                  </div>
+                <% } %>
               </div>
-              <div class="mb-2">
-                <input type="text" name="invitado_cedula" class="form-control form-control-custom" placeholder="Cédula (ej. 1-1234-0567)" pattern="^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})?$" title="Formato: 9 dígitos costarricense" value="<%= datosPrevios.invitado_cedula || '' %>">
-              </div>
-              <div class="mb-3">
-                <input type="text" name="invitado_parentesco" class="form-control form-control-custom" placeholder="Parentesco o Relación" value="<%= datosPrevios.invitado_parentesco || '' %>">
-              </div>
-              <small class="text-muted d-block mb-3">
-                Los invitados registrados aparecerán en el detalle de la reserva y en la lista de recepción para control de acceso.
+
+              <!-- BOTÓN PARA AGREGAR OTRO INVITADO -->
+              <button type="button" class="btn btn-sm btn-outline-dark w-100 mt-1" onclick="agregarFilaInvitado()" style="border-radius: 8px;">
+                <i class="bi bi-person-plus me-1"></i> Agregar otro invitado
+              </button>
+
+              <small class="text-muted d-block mt-auto pt-2" style="font-size: 0.72rem;">
+                Los acompañantes registrados aparecerán en tu reserva y en la lista de recepción para control de acceso.
               </small>
             </div>
           </div>
@@ -456,6 +483,44 @@ document.getElementById('formReserva').addEventListener('submit', function(e) {
     return;
   }
 });
+
+// Manejo dinamico de multiples invitados (Paso #4)
+let contadorInvitados = document.querySelectorAll('#contenedorInvitados .bloque-invitado').length || 1;
+
+function agregarFilaInvitado() {
+  contadorInvitados++;
+  const cont = document.getElementById('contenedorInvitados');
+  const num = contadorInvitados;
+  const div = document.createElement('div');
+  div.className = 'bloque-invitado border rounded-3 p-2 bg-light position-relative';
+  div.id = 'bloqueInvitado' + num;
+  div.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <span class="fw-bold text-muted" style="font-size: 0.75rem;">Invitado #${num}</span>
+      <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" onclick="eliminarFilaInvitado('${div.id}')" title="Quitar este invitado">
+        <i class="bi bi-x-circle-fill"></i>
+      </button>
+    </div>
+    <div class="mb-1">
+      <input type="text" name="invitado_nombre" class="form-control form-control-custom form-control-sm" placeholder="Nombre completo" required>
+    </div>
+    <div class="mb-1">
+      <input type="text" name="invitado_cedula" class="form-control form-control-custom form-control-sm" placeholder="Cédula (ej. 1-1234-0567)" pattern="^(?:[1-9]-?\\d{4}-?\\d{4}|\\d{9}|\\d{11,12})?$" title="Formato: 9 dígitos costarricense" required>
+    </div>
+    <div>
+      <input type="text" name="invitado_parentesco" class="form-control form-control-custom form-control-sm" placeholder="Parentesco o Relación">
+    </div>
+  `;
+  cont.appendChild(div);
+  cont.scrollTop = cont.scrollHeight;
+}
+
+function eliminarFilaInvitado(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.remove();
+  }
+}
 
 // Ejecutar al cargar
 document.addEventListener('DOMContentLoaded', () => {

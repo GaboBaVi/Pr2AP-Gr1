@@ -217,11 +217,22 @@ const reservaController = {
         return res.redirect('/socio/reservar');
       }
 
-      // 3. Validar cédula de invitado si fue provista
-      if (invitado_cedula && invitado_cedula.trim()) {
-        const regexCedula = /^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$/;
-        if (!regexCedula.test(invitado_cedula.trim())) {
-          req.session.errorFormReserva = 'La cédula del invitado no tiene un formato válido (ej. 1-1234-0567 o 9 dígitos).';
+      // 3. Validar cédulas de invitados si fueron provistas
+      const nombresArray = Array.isArray(invitado_nombre) 
+        ? invitado_nombre 
+        : (invitado_nombre ? [invitado_nombre] : []);
+      const cedulasArray = Array.isArray(invitado_cedula) 
+        ? invitado_cedula 
+        : (invitado_cedula ? [invitado_cedula] : []);
+      const parentescosArray = Array.isArray(invitado_parentesco) 
+        ? invitado_parentesco 
+        : (invitado_parentesco ? [invitado_parentesco] : []);
+
+      const regexCedula = /^(?:[1-9]-?\d{4}-?\d{4}|\d{9}|\d{11,12})$/;
+      for (let i = 0; i < cedulasArray.length; i++) {
+        const ced = cedulasArray[i] ? cedulasArray[i].trim() : '';
+        if (ced && !regexCedula.test(ced)) {
+          req.session.errorFormReserva = `La cédula del invitado "${ced}" no tiene un formato válido costarricense (ej. 1-1234-0567 o 9 dígitos).`;
           req.session.datosFormReserva = req.body;
           return res.redirect('/socio/reservar');
         }
@@ -265,22 +276,29 @@ const reservaController = {
       // 7. Actualizar el estado de cuenta del socio recalculando cargos reales
       await Cobro.recalcularCargosMes(req.session.usuario.id);
 
-      // 8. Registrar invitado si fue ingresado (Paso #4)
-      if (invitado_cedula && invitado_nombre && invitado_nombre.trim()) {
-        const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
-        const limite = membresia ? membresia.limite_invitados_mes : 5;
-        const totalMes = await Invitado.contarInvitadosMes(req.session.usuario.id);
+      // 8. Registrar todos los invitados ingresados (Paso #4)
+      const membresia = await Membresia.obtenerPorUsuario(req.session.usuario.id);
+      const limite = membresia ? membresia.limite_invitados_mes : 5;
+      let totalMes = await Invitado.contarInvitadosMes(req.session.usuario.id);
 
-        if (totalMes < limite) {
-          await Invitado.registrar({
-            usuario_id: req.session.usuario.id,
-            instalacion_id,
-            reserva_id: nuevaReserva.id,
-            cedula: invitado_cedula.trim(),
-            nombre_completo: invitado_nombre.trim(),
-            fecha_visita: fecha,
-            parentesco_relacion: invitado_parentesco || 'amigo'
-          });
+      for (let i = 0; i < nombresArray.length; i++) {
+        const nom = nombresArray[i] ? nombresArray[i].trim() : '';
+        const ced = cedulasArray[i] ? cedulasArray[i].trim() : '';
+        const par = parentescosArray[i] ? parentescosArray[i].trim() : 'amigo';
+
+        if (nom && ced) {
+          if (totalMes < limite) {
+            await Invitado.registrar({
+              usuario_id: req.session.usuario.id,
+              instalacion_id,
+              reserva_id: nuevaReserva.id,
+              cedula: ced,
+              nombre_completo: nom,
+              fecha_visita: fecha,
+              parentesco_relacion: par || 'amigo'
+            });
+            totalMes++;
+          }
         }
       }
 

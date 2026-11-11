@@ -62,13 +62,13 @@
     <!-- ACCIONES RAPIDAS -->
     <div class="row g-3">
       <div class="col-sm-4">
-        <a href="/socio/reservar" class="custom-card text-decoration-none d-block text-center p-3 h-100">
+        <a href="/socio/reservar" class="custom-card text-decoration-none d-block text-center p-3 h-100 shadow-sm border">
           <i class="bi bi-calendar2-plus fs-2 d-block mb-2 text-dark"></i>
           <span class="small fw-bold text-dark d-block">Realizar nueva reserva</span>
         </a>
       </div>
       <div class="col-sm-4">
-        <a href="/socio/reservar" class="custom-card text-decoration-none d-block text-center p-3 h-100">
+        <a href="/socio/reservar" class="custom-card text-decoration-none d-block text-center p-3 h-100 shadow-sm border">
           <i class="bi bi-person-plus fs-2 d-block mb-2 text-dark"></i>
           <span class="small fw-bold text-dark d-block">Registrar Invitado</span>
         </a>
@@ -77,15 +77,15 @@
         <% const esFamiliar = membresia && membresia.tipo && membresia.tipo.toLowerCase() === 'familiar'; %>
         <% const cantBeneficiarios = (beneficiarios ? beneficiarios.length : 0); %>
         <% const maxBeneficiarios = (membresia && membresia.limite_beneficiarios) ? membresia.limite_beneficiarios : 4; %>
-        <button type="button" class="custom-card w-100 text-decoration-none border-0 text-center p-3 h-100 position-relative" data-bs-toggle="modal" data-bs-target="#modalBeneficiarios">
+        <button type="button" class="custom-card w-100 text-decoration-none border text-center p-3 h-100 position-relative shadow-sm" data-bs-toggle="modal" data-bs-target="#modalBeneficiarios">
           <i class="bi bi-people fs-2 d-block mb-2 text-dark"></i>
           <span class="small fw-bold text-dark d-block">Añadir Beneficiarios</span>
           <% if (esFamiliar) { %>
-            <span class="badge <%= cantBeneficiarios >= maxBeneficiarios ? 'bg-secondary' : 'bg-primary' %> mt-1">
+            <span class="badge border mt-1 fw-bold" style="background-color: #e2e8f0; color: #0f172a; border-color: #cbd5e1 !important; font-size: 0.8rem;">
               <%= cantBeneficiarios %>/<%= maxBeneficiarios %>
             </span>
           <% } else { %>
-            <span class="badge bg-secondary mt-1">Solo Familiar</span>
+            <span class="badge border mt-1 fw-normal" style="background-color: #f1f5f9; color: #64748b; border-color: #e2e8f0 !important; font-size: 0.75rem;">Solo Familiar</span>
           <% } %>
         </button>
       </div>
@@ -98,9 +98,9 @@
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h6 class="fw-bold mb-0 small text-muted">Beneficiarios Registrados</h6>
         <% if (esFamiliar) { %>
-          <span class="badge bg-secondary"><%= cBen %>/<%= mBen %></span>
+          <span class="badge border fw-bold" style="background-color: #e2e8f0; color: #0f172a; border-color: #cbd5e1 !important;"><%= cBen %>/<%= mBen %></span>
         <% } else { %>
-          <span class="badge bg-secondary">No disponible</span>
+          <span class="badge border" style="background-color: #f1f5f9; color: #64748b; border-color: #e2e8f0 !important;">No disponible</span>
         <% } %>
       </div>
       <% if (!esFamiliar) { %>
