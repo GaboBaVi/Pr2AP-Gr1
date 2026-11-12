@@ -76,7 +76,12 @@
                   <a href="/socio/reservas/editar/<%= r.id %>" class="btn btn-sm btn-modern-edit">
                     <i class="bi bi-pencil-square me-1"></i> Modificar
                   </a>
-                  <form action="/socio/reservas/cancelar" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta reserva?');">
+                  <form action="/socio/reservas/cancelar" method="POST" class="form-confirmar"
+                        data-confirm-title="Cancelar Reserva"
+                        data-confirm-msg="¿Seguro que deseas cancelar tu reserva para <strong><%= r.nombre_instalacion %></strong>? El espacio quedará liberado inmediatamente."
+                        data-confirm-btn="Sí, Cancelar Reserva"
+                        data-confirm-type="danger"
+                        data-confirm-icon="bi-calendar-x-fill">
                     <input type="hidden" name="id" value="<%= r.id %>">
                     <button type="submit" class="btn btn-sm btn-modern-danger">
                       <i class="bi bi-x-circle me-1"></i> Cancelar

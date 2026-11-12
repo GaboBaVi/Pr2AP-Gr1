@@ -74,20 +74,33 @@
                     </form>
                   </td>
                   <td>
-                    <form action="/admin/socios/estado" method="POST" class="d-inline">
-                      <input type="hidden" name="id" value="<%= s.id %>">
-                      <% if (s.estado === 'activo') { %>
+                    <% if (s.estado === 'activo') { %>
+                      <form action="/admin/socios/estado" method="POST" class="d-inline form-confirmar"
+                            data-confirm-title="Suspender Cuenta"
+                            data-confirm-msg="¿Seguro que deseas suspender la cuenta de <strong><%= s.nombre_completo %></strong>? El socio no podrá iniciar sesión ni reservar instalaciones."
+                            data-confirm-btn="Suspender Cuenta"
+                            data-confirm-type="danger"
+                            data-confirm-icon="bi-person-x-fill">
+                        <input type="hidden" name="id" value="<%= s.id %>">
                         <input type="hidden" name="estado" value="suspendido">
-                        <button type="submit" class="btn btn-sm btn-modern-danger" onclick="return confirm('¿Suspender la cuenta de <%= s.nombre_completo %>?')">
+                        <button type="submit" class="btn btn-sm btn-modern-danger">
                           <i class="bi bi-pause-circle"></i> Suspender
                         </button>
-                      <% } else { %>
+                      </form>
+                    <% } else { %>
+                      <form action="/admin/socios/estado" method="POST" class="d-inline form-confirmar"
+                            data-confirm-title="Activar Cuenta"
+                            data-confirm-msg="¿Deseas activar nuevamente la cuenta de <strong><%= s.nombre_completo %></strong>? Se restablecerán sus accesos y permisos."
+                            data-confirm-btn="Activar Cuenta"
+                            data-confirm-type="success"
+                            data-confirm-icon="bi-person-check-fill">
+                        <input type="hidden" name="id" value="<%= s.id %>">
                         <input type="hidden" name="estado" value="activo">
                         <button type="submit" class="btn btn-sm btn-modern-success">
                           <i class="bi bi-play-circle"></i> Activar
                         </button>
-                      <% } %>
-                    </form>
+                      </form>
+                    <% } %>
                   </td>
                   <td>
                     <div class="d-flex gap-1">
@@ -97,7 +110,12 @@
                       </button>
 
                       <!-- RESET PASSWORD -->
-                      <form action="/admin/socios/reset-password" method="POST" class="d-inline" onsubmit="return confirm('¿Restablecer contraseña para <%= s.nombre_completo %>? Se le enviará una clave temporal.');">
+                      <form action="/admin/socios/reset-password" method="POST" class="d-inline form-confirmar"
+                            data-confirm-title="Restablecer Contraseña"
+                            data-confirm-msg="¿Restablecer contraseña para <strong><%= s.nombre_completo %></strong>? Se generará una clave temporal segura y se le enviará por correo electrónico."
+                            data-confirm-btn="Restablecer Clave"
+                            data-confirm-type="warning"
+                            data-confirm-icon="bi-key-fill">
                         <input type="hidden" name="id" value="<%= s.id %>">
                         <button type="submit" class="btn btn-sm btn-modern-warning">
                           <i class="bi bi-key"></i> Reset Clave
@@ -107,7 +125,7 @@
 
                     <!-- MODAL EDITAR MEMBRESIA -->
                     <div class="modal fade" id="modalMembresia<%= s.id %>" tabindex="-1">
-                      <div class="modal-dialog">
+                      <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content custom-card p-3">
                           <div class="modal-header border-0">
                             <h5 class="modal-title fw-bold">Gestión de Membresía - <%= s.nombre_completo %></h5>

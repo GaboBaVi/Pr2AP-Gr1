@@ -53,7 +53,12 @@
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <span class="badge bg-light text-dark border">Identificador: <code><%= p.clave %></code></span>
                 <% if (!baseTemplates.includes(p.clave)) { %>
-                  <form action="/admin/notificaciones/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar la plantilla personalizada \'<%= p.nombre %>\'?');">
+                  <form action="/admin/notificaciones/eliminar" method="POST" class="d-inline form-confirmar"
+                        data-confirm-title="Eliminar Plantilla"
+                        data-confirm-msg="¿Seguro que deseas eliminar la plantilla personalizada <strong>'<%= p.nombre %>'</strong>? Esta acción no se puede deshacer."
+                        data-confirm-btn="Eliminar Plantilla"
+                        data-confirm-type="danger"
+                        data-confirm-icon="bi-trash-fill">
                     <input type="hidden" name="clave" value="<%= p.clave %>">
                     <button type="submit" class="btn btn-sm btn-modern-danger py-1 px-3" title="Eliminar plantilla">
                       <i class="bi bi-trash me-1"></i> Eliminar Plantilla
@@ -89,7 +94,7 @@
 
 <!-- MODAL NUEVA PLANTILLA -->
 <div class="modal fade" id="modalNuevaPlantilla" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content custom-card p-3">
       <div class="modal-header border-0">
         <h5 class="modal-title fw-bold">Crear Nueva Plantilla de Notificación</h5>

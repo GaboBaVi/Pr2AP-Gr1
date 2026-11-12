@@ -128,7 +128,12 @@
                   <i class="bi bi-pencil"></i>
                 </button>
                 <!-- Botón Quitar de la lista -->
-                <form action="/auth/perfil/beneficiarios/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas quitar a <%= b.nombre_completo %> de la lista de beneficiarios?');">
+                <form action="/auth/perfil/beneficiarios/eliminar" method="POST" class="d-inline form-confirmar"
+                      data-confirm-title="Quitar Beneficiario"
+                      data-confirm-msg="¿Seguro que deseas quitar a <strong><%= b.nombre_completo %></strong> de tu lista de beneficiarios?"
+                      data-confirm-btn="Quitar Beneficiario"
+                      data-confirm-type="danger"
+                      data-confirm-icon="bi-person-dash-fill">
                   <input type="hidden" name="id" value="<%= b.id %>">
                   <button type="submit" class="btn btn-sm btn-modern-icon-danger" title="Quitar beneficiario">
                     <i class="bi bi-trash"></i>
@@ -147,7 +152,7 @@
 
 <!-- MODAL EDITAR PERFIL -->
 <div class="modal fade" id="modalEditarPerfil" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content custom-card p-3">
       <div class="modal-header border-0">
         <h5 class="modal-title fw-bold">Editar Perfil</h5>
@@ -183,17 +188,19 @@
 
 <!-- MODAL BENEFICIARIOS -->
 <div class="modal fade" id="modalBeneficiarios" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content custom-card p-3">
       <% const esFamiliarModal = membresia && membresia.tipo && membresia.tipo.toLowerCase() === 'familiar'; %>
       <% if (!esFamiliarModal) { %>
-        <div class="modal-header border-0">
+        <div class="modal-header border-0 pb-0">
           <h5 class="modal-title fw-bold">Apartado de Beneficiarios</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body border-0 text-center py-4">
-          <div class="mb-3">
-            <i class="bi bi-shield-lock text-warning" style="font-size: 3.2rem;"></i>
+          <div class="d-flex justify-content-center mb-3">
+            <div class="modal-icon-badge warning">
+              <i class="bi bi-shield-lock-fill"></i>
+            </div>
           </div>
           <h5 class="fw-bold mb-2">Acceso No Disponible</h5>
           <p class="text-muted mb-2">
@@ -203,7 +210,7 @@
             <i class="bi bi-info-circle me-1"></i> El registro y gestión de beneficiarios adicionales está habilitado exclusivamente para membresías de categoría <strong>Familiar</strong>.
           </div>
         </div>
-        <div class="modal-footer border-0 justify-content-center">
+        <div class="modal-footer border-0 justify-content-center pt-0">
           <button type="button" class="btn btn-secondary btn-cancel-modal px-4" data-bs-dismiss="modal">Entendido</button>
         </div>
       <% } else { %>
@@ -266,7 +273,7 @@
 <% if (beneficiarios && beneficiarios.length > 0) { %>
   <% beneficiarios.forEach(b => { %>
     <div class="modal fade" id="modalEditarBeneficiario<%= b.id %>" tabindex="-1">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content custom-card p-3">
           <div class="modal-header border-0">
             <h5 class="modal-title fw-bold">Editar Información de Beneficiario</h5>

@@ -69,7 +69,12 @@
                         <%= inst.mantenimiento_tipo === 'horas' && inst.mantenimiento_hora_inicio ? (inst.mantenimiento_hora_inicio.slice(0,5) + ' - ' + inst.mantenimiento_hora_fin.slice(0,5)) : 'Todo el día' %>
                       </small>
                     </div>
-                    <form action="/admin/instalaciones/bloquear" method="POST" onsubmit="return confirm('¿Confirmar restablecimiento de <%= inst.nombre %> para habilitarla nuevamente?');">
+                    <form action="/admin/instalaciones/bloquear" method="POST" class="form-confirmar"
+                          data-confirm-title="Habilitar Instalación"
+                          data-confirm-msg="¿Confirmar restablecimiento de <strong><%= inst.nombre %></strong> para habilitarla nuevamente para reservas?"
+                          data-confirm-btn="Habilitar Instalación"
+                          data-confirm-type="success"
+                          data-confirm-icon="bi-unlock-fill">
                       <input type="hidden" name="id" value="<%= inst.id %>">
                       <input type="hidden" name="fecha" value="<%= fecha %>">
                       <button type="submit" class="btn btn-sm btn-modern-success py-1 px-2 w-100 justify-content-center">
@@ -94,7 +99,7 @@
 <!-- MODALES DE BLOQUEO POR MANTENIMIENTO -->
 <% instalaciones.forEach(inst => { %>
   <div class="modal fade" id="modalBloqueo<%= inst.id %>" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content custom-card p-3">
         <div class="modal-header border-0">
           <div>

@@ -16,6 +16,120 @@
   <!-- Bootstrap 5 JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- Script global para modales y popups de confirmación estandarizados -->
+  <script>
+    window.mostrarConfirmacion = function(opciones) {
+      return new Promise((resolve) => {
+        const modalEl = document.getElementById('modalConfirmacionGlobal');
+        if (!modalEl || typeof bootstrap === 'undefined') {
+          const textoPlano = opciones.mensaje ? opciones.mensaje.replace(/<[^>]*>?/gm, '') : '¿Confirmar?';
+          resolve(window.confirm(textoPlano));
+          return;
+        }
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const iconBox = document.getElementById('modalConfirmacionIconBox');
+        const icon = document.getElementById('modalConfirmacionIcon');
+        const titulo = document.getElementById('modalConfirmacionTitulo');
+        const mensaje = document.getElementById('modalConfirmacionMensaje');
+        const btnAceptar = document.getElementById('modalConfirmacionBtnAceptar');
+        const btnCancelar = document.getElementById('modalConfirmacionBtnCancelar');
+
+        const tipo = opciones.tipo || 'danger'; // 'danger', 'warning', 'success', 'info', 'dark'
+        
+        iconBox.className = 'modal-icon-badge ' + tipo;
+        if (opciones.icono) {
+          icon.className = 'bi ' + opciones.icono;
+        } else if (tipo === 'danger') {
+          icon.className = 'bi bi-exclamation-triangle-fill';
+        } else if (tipo === 'warning') {
+          icon.className = 'bi bi-key-fill';
+        } else if (tipo === 'success') {
+          icon.className = 'bi bi-check-circle-fill';
+        } else if (tipo === 'info') {
+          icon.className = 'bi bi-info-circle-fill';
+        } else {
+          icon.className = 'bi bi-question-circle-fill';
+        }
+
+        titulo.textContent = opciones.titulo || 'Confirmar Acción';
+        mensaje.innerHTML = opciones.mensaje || '¿Estás seguro de continuar con esta acción?';
+        btnAceptar.textContent = opciones.btnTexto || 'Confirmar';
+
+        if (tipo === 'danger') {
+          btnAceptar.className = 'btn btn-danger rounded-pill px-4 fw-semibold';
+        } else if (tipo === 'warning') {
+          btnAceptar.className = 'btn btn-warning text-dark rounded-pill px-4 fw-semibold';
+        } else if (tipo === 'success') {
+          btnAceptar.className = 'btn btn-success rounded-pill px-4 fw-semibold';
+        } else {
+          btnAceptar.className = 'btn-dark-pill px-4';
+        }
+
+        btnCancelar.textContent = opciones.cancelarTexto || 'Cancelar';
+
+        let resuelto = false;
+
+        const onAceptar = () => {
+          resuelto = true;
+          modal.hide();
+          resolve(true);
+        };
+
+        const onOcultar = () => {
+          btnAceptar.removeEventListener('click', onAceptar);
+          modalEl.removeEventListener('hidden.bs.modal', onOcultar);
+          if (!resuelto) resolve(false);
+        };
+
+        btnAceptar.addEventListener('click', onAceptar, { once: true });
+        modalEl.addEventListener('hidden.bs.modal', onOcultar, { once: true });
+
+        modal.show();
+      });
+    };
+
+    // Interceptor global para formularios que requieren confirmación elegante
+    document.addEventListener('submit', function(e) {
+      const form = e.target.closest('.form-confirmar');
+      if (form && !form.dataset.confirmado) {
+        e.preventDefault();
+        const titulo = form.getAttribute('data-confirm-title') || 'Confirmar Acción';
+        const mensaje = form.getAttribute('data-confirm-msg') || '¿Estás seguro de continuar?';
+        const btnTexto = form.getAttribute('data-confirm-btn') || 'Confirmar';
+        const tipo = form.getAttribute('data-confirm-type') || 'danger';
+        const icono = form.getAttribute('data-confirm-icon') || '';
+
+        window.mostrarConfirmacion({ titulo, mensaje, btnTexto, tipo, icono }).then((confirmado) => {
+          if (confirmado) {
+            form.dataset.confirmado = 'true';
+            form.submit();
+          }
+        });
+      }
+    });
+
+    // Interceptor global para enlaces con confirmación elegante
+    document.addEventListener('click', function(e) {
+      const link = e.target.closest('.btn-confirmar-link');
+      if (link) {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        const titulo = link.getAttribute('data-confirm-title') || 'Confirmar Acción';
+        const mensaje = link.getAttribute('data-confirm-msg') || '¿Estás seguro de continuar?';
+        const btnTexto = link.getAttribute('data-confirm-btn') || 'Confirmar';
+        const tipo = link.getAttribute('data-confirm-type') || 'danger';
+        const icono = link.getAttribute('data-confirm-icon') || '';
+
+        window.mostrarConfirmacion({ titulo, mensaje, btnTexto, tipo, icono }).then((confirmado) => {
+          if (confirmado && href) {
+            window.location.href = href;
+          }
+        });
+      }
+    });
+  </script>
+
   <!-- Script global para auto-desvanecer alertas después de 5 segundos -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {

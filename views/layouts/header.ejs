@@ -55,21 +55,40 @@
     </div>
   </nav>
 
+  <!-- MODAL GLOBAL DE CONFIRMACIÓN ELEGANTE Y ESTANDARIZADO -->
+  <div class="modal fade" id="modalConfirmacionGlobal" tabindex="-1" aria-labelledby="modalConfirmacionTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+      <div class="modal-content custom-card p-4 text-center border-0 shadow-lg">
+        <div class="d-flex justify-content-center mb-2">
+          <div id="modalConfirmacionIconBox" class="modal-icon-badge danger">
+            <i id="modalConfirmacionIcon" class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+        </div>
+        <h5 class="fw-bold mb-2 text-dark" id="modalConfirmacionTitulo">¿Confirmar Acción?</h5>
+        <div class="text-muted small mb-4 px-2" id="modalConfirmacionMensaje">¿Estás seguro de que deseas continuar con esta acción?</div>
+        <div class="d-flex justify-content-center gap-2">
+          <button type="button" class="btn btn-secondary btn-cancel-modal px-4" data-bs-dismiss="modal" id="modalConfirmacionBtnCancelar">Cancelar</button>
+          <button type="button" class="btn btn-danger rounded-pill px-4 fw-semibold" id="modalConfirmacionBtnAceptar">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DE CONFIRMACION PARA CERRAR SESION -->
   <% if (usuario) { %>
     <div class="modal fade" id="modalCerrarSesion" tabindex="-1" aria-labelledby="modalCerrarSesionLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content custom-card p-3">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-bold" id="modalCerrarSesionLabel">Cerrar Sesión</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content custom-card p-4 text-center border-0 shadow-lg">
+          <div class="d-flex justify-content-center mb-2">
+            <div class="modal-icon-badge dark">
+              <i class="bi bi-box-arrow-right"></i>
+            </div>
           </div>
-          <div class="modal-body border-0 py-3">
-            <p class="text-muted mb-0">¿Estás seguro(a) de que deseas salir de tu cuenta en Club Valle Alto?</p>
-          </div>
-          <div class="modal-footer border-0 pt-0 d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
-            <a href="/auth/logout" class="btn-dark-pill">Sí, Cerrar Sesión</a>
+          <h5 class="fw-bold mb-2 text-dark" id="modalCerrarSesionLabel">Cerrar Sesión</h5>
+          <p class="text-muted small mb-4 px-2">¿Estás seguro(a) de que deseas salir de tu cuenta en Club Valle Alto?</p>
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-secondary btn-cancel-modal px-4" data-bs-dismiss="modal">Cancelar</button>
+            <a href="/auth/logout" class="btn-dark-pill px-4">Sí, Cerrar Sesión</a>
           </div>
         </div>
       </div>

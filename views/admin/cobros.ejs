@@ -10,8 +10,15 @@
         </div>
         <div class="d-flex gap-2 align-items-center">
           <input type="text" class="form-control form-control-custom" style="width: 250px;" placeholder="Buscar socio..." id="busquedaCobros" onkeyup="filtrarCobros()">
-          <form action="/admin/cobros/recordatorios" method="POST" onsubmit="return confirm('¿Enviar recordatorio de pago a todos los socios con cuotas pendientes o vencidas?');">
-            <button type="submit" class="btn-dark-pill" style="height: 38px;">Enviar recordatorios de pago</button>
+          <form action="/admin/cobros/recordatorios" method="POST" class="form-confirmar"
+                data-confirm-title="Enviar Recordatorios de Pago"
+                data-confirm-msg="¿Deseas enviar avisos de cobro por correo electrónico a todos los socios con cuotas pendientes o vencidas?"
+                data-confirm-btn="Enviar Recordatorios"
+                data-confirm-type="info"
+                data-confirm-icon="bi-envelope-paper-fill">
+            <button type="submit" class="btn-dark-pill" style="height: 38px;">
+              <i class="bi bi-envelope-arrow-up me-1"></i> Enviar recordatorios de pago
+            </button>
           </form>
         </div>
       </div>
@@ -51,9 +58,16 @@
                     </span>
                   </td>
                   <td class="text-end">
-                    <form action="/admin/cobros/pagar" method="POST" onsubmit="return confirm('¿Marcar como recibido el pago de CRC <%= Number(m.total_pagar).toLocaleString() %> para <%= m.nombre_completo %>?');">
+                    <form action="/admin/cobros/pagar" method="POST" class="form-confirmar"
+                          data-confirm-title="Registrar Pago Recibido"
+                          data-confirm-msg="¿Marcar como recibido el pago de <strong>CRC <%= Number(m.total_pagar).toLocaleString() %></strong> para <strong><%= m.nombre_completo %></strong>?"
+                          data-confirm-btn="Confirmar Pago"
+                          data-confirm-type="success"
+                          data-confirm-icon="bi-cash-coin">
                       <input type="hidden" name="id" value="<%= m.id %>">
-                      <button type="submit" class="btn-dark-pill btn-sm-pill py-1 px-3">Marcar como recibido</button>
+                      <button type="submit" class="btn btn-sm btn-modern-success py-1 px-3">
+                        <i class="bi bi-check-circle me-1"></i> Marcar como recibido
+                      </button>
                     </form>
                   </td>
                 </tr>
