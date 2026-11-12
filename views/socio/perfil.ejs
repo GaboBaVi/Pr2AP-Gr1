@@ -124,13 +124,13 @@
               </div>
               <div class="d-flex align-items-center gap-1">
                 <!-- Botón Editar -->
-                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="modal" data-bs-target="#modalEditarBeneficiario<%= b.id %>" title="Editar información">
+                <button type="button" class="btn btn-sm btn-modern-icon" data-bs-toggle="modal" data-bs-target="#modalEditarBeneficiario<%= b.id %>" title="Editar información">
                   <i class="bi bi-pencil"></i>
                 </button>
                 <!-- Botón Quitar de la lista -->
                 <form action="/auth/perfil/beneficiarios/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas quitar a <%= b.nombre_completo %> de la lista de beneficiarios?');">
                   <input type="hidden" name="id" value="<%= b.id %>">
-                  <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Quitar beneficiario">
+                  <button type="submit" class="btn btn-sm btn-modern-icon-danger" title="Quitar beneficiario">
                     <i class="bi bi-trash"></i>
                   </button>
                 </form>

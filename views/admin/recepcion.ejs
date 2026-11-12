@@ -8,10 +8,13 @@
           <h4 class="fw-bold mb-1">Control de Acceso y Recepción de Invitados</h4>
           <span class="text-muted small">Listado de invitados autorizados para ingresar al club</span>
         </div>
-        <form action="/admin/recepcion" method="GET" class="d-flex gap-2 align-items-center">
-          <label class="small text-muted mb-0 fw-bold">Fecha:</label>
-          <input type="date" name="fecha" value="<%= fecha %>" class="form-control form-control-custom form-control-sm" onchange="this.form.submit()">
-        </form>
+        <div class="d-flex gap-2 align-items-center">
+          <form action="/admin/recepcion" method="GET" class="d-flex gap-2 align-items-center mb-0">
+            <label class="small text-muted mb-0 fw-bold">Fecha:</label>
+            <input type="date" name="fecha" value="<%= fecha %>" class="form-control form-control-custom form-control-sm" onchange="this.form.submit()">
+          </form>
+          <a href="/admin/socios" class="btn-volver"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
       </div>
 
       <div class="table-responsive">
@@ -38,8 +41,8 @@
                   <td><span class="badge bg-light text-dark border text-capitalize"><%= inv.parentesco_relacion %></span></td>
                   <td><%= new Date(inv.fecha_visita).toLocaleDateString() %></td>
                   <td class="text-end">
-                    <button class="btn btn-sm btn-outline-success py-0 px-3 rounded-pill" onclick="this.className='btn btn-sm btn-success py-0 px-3 rounded-pill'; this.innerText='Ingresado';">
-                      Permitir Acceso
+                    <button class="btn btn-sm btn-modern-success py-1 px-3" onclick="this.className='btn btn-sm btn-success py-1 px-3 rounded-pill'; this.innerHTML='<i class=\'bi bi-check2 me-1\'></i> Ingresado';">
+                      <i class="bi bi-door-open me-1"></i> Permitir Acceso
                     </button>
                   </td>
                 </tr>

@@ -22,16 +22,22 @@
   <!-- COLUMNA PRINCIPAL: HISTORIAL DE RESERVAS CON PESTAÑAS -->
   <div class="col-lg-8">
     <div class="custom-card">
-      <!-- PESTAÑAS -->
-      <ul class="nav nav-pills mb-4 nav-fill">
+      <!-- PESTAÑAS SEGMENTADAS MODERNAS -->
+      <ul class="nav segmented-tabs mb-4">
         <li class="nav-item">
-          <a class="nav-link <%= estadoActual === 'activa' ? 'active' : '' %>" href="/socio/reservas?estado=activa">Activas</a>
+          <a class="nav-link <%= estadoActual === 'activa' ? 'active' : '' %>" href="/socio/reservas?estado=activa">
+            <i class="bi bi-calendar-check me-1"></i> Activas
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <%= estadoActual === 'finalizada' ? 'active' : '' %>" href="/socio/reservas?estado=finalizada">Finalizadas</a>
+          <a class="nav-link <%= estadoActual === 'finalizada' ? 'active' : '' %>" href="/socio/reservas?estado=finalizada">
+            <i class="bi bi-check2-circle me-1"></i> Finalizadas
+          </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <%= estadoActual === 'cancelada' ? 'active' : '' %>" href="/socio/reservas?estado=cancelada">Canceladas</a>
+          <a class="nav-link <%= estadoActual === 'cancelada' ? 'active' : '' %>" href="/socio/reservas?estado=cancelada">
+            <i class="bi bi-x-circle me-1"></i> Canceladas
+          </a>
         </li>
       </ul>
 
@@ -67,10 +73,14 @@
               </div>
               <% if (estadoActual === 'activa') { %>
                 <div class="d-flex gap-2 align-items-center">
-                  <a href="/socio/reservas/editar/<%= r.id %>" class="btn btn-sm btn-outline-dark rounded-pill">Modificar</a>
+                  <a href="/socio/reservas/editar/<%= r.id %>" class="btn btn-sm btn-modern-edit">
+                    <i class="bi bi-pencil-square me-1"></i> Modificar
+                  </a>
                   <form action="/socio/reservas/cancelar" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar esta reserva?');">
                     <input type="hidden" name="id" value="<%= r.id %>">
-                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-modern-danger">
+                      <i class="bi bi-x-circle me-1"></i> Cancelar
+                    </button>
                   </form>
                 </div>
               <% } %>

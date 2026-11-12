@@ -10,8 +10,12 @@
         </div>
         <div class="d-flex gap-2 align-items-center">
           <input type="text" class="form-control form-control-custom" style="width: 250px;" placeholder="Buscar socio..." id="busquedaSocios" onkeyup="filtrarSocios()">
-          <a href="/admin/recepcion" class="btn btn-outline-dark d-inline-flex align-items-center" style="height: 38px; border-radius: 8px; padding: 0 1.2rem;">Recepción</a>
-          <a href="/admin/reportes" class="btn btn-outline-dark d-inline-flex align-items-center" style="height: 38px; border-radius: 8px; padding: 0 1.2rem;">Reporte Demanda</a>
+          <a href="/admin/recepcion" class="btn-modern-neutral d-inline-flex align-items-center" style="height: 38px;">
+            <i class="bi bi-person-check me-1"></i> Recepción
+          </a>
+          <a href="/admin/reportes" class="btn-modern-neutral d-inline-flex align-items-center" style="height: 38px;">
+            <i class="bi bi-bar-chart-line me-1"></i> Reporte Demanda
+          </a>
         </div>
       </div>
 
@@ -66,7 +70,7 @@
                         <option value="encargado_instalaciones" <%= s.rol === 'encargado_instalaciones' ? 'selected' : '' %>>Encargado Instalaciones</option>
                         <option value="encargado_cobros" <%= s.rol === 'encargado_cobros' ? 'selected' : '' %>>Encargado Cobros</option>
                       </select>
-                      <button type="submit" class="btn btn-sm btn-dark py-0 px-2" style="font-size: 0.75rem;">OK</button>
+                      <button type="submit" class="btn btn-sm btn-dark py-0 px-2 rounded-pill" style="font-size: 0.75rem;">OK</button>
                     </form>
                   </td>
                   <td>
@@ -74,24 +78,30 @@
                       <input type="hidden" name="id" value="<%= s.id %>">
                       <% if (s.estado === 'activo') { %>
                         <input type="hidden" name="estado" value="suspendido">
-                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="return confirm('¿Suspender la cuenta de <%= s.nombre_completo %>?')">Suspender</button>
+                        <button type="submit" class="btn btn-sm btn-modern-danger" onclick="return confirm('¿Suspender la cuenta de <%= s.nombre_completo %>?')">
+                          <i class="bi bi-pause-circle"></i> Suspender
+                        </button>
                       <% } else { %>
                         <input type="hidden" name="estado" value="activo">
-                        <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2">Activar</button>
+                        <button type="submit" class="btn btn-sm btn-modern-success">
+                          <i class="bi bi-play-circle"></i> Activar
+                        </button>
                       <% } %>
                     </form>
                   </td>
                   <td>
                     <div class="d-flex gap-1">
                       <!-- MODAL MEMBRESIA -->
-                      <button type="button" class="btn btn-sm btn-outline-dark py-0 px-2" data-bs-toggle="modal" data-bs-target="#modalMembresia<%= s.id %>">
-                        Editar Membresía
+                      <button type="button" class="btn btn-sm btn-modern-neutral" data-bs-toggle="modal" data-bs-target="#modalMembresia<%= s.id %>">
+                        <i class="bi bi-card-heading"></i> Membresía
                       </button>
 
                       <!-- RESET PASSWORD -->
                       <form action="/admin/socios/reset-password" method="POST" class="d-inline" onsubmit="return confirm('¿Restablecer contraseña para <%= s.nombre_completo %>? Se le enviará una clave temporal.');">
                         <input type="hidden" name="id" value="<%= s.id %>">
-                        <button type="submit" class="btn btn-sm btn-outline-warning text-dark py-0 px-2">Reset Clave</button>
+                        <button type="submit" class="btn btn-sm btn-modern-warning">
+                          <i class="bi bi-key"></i> Reset Clave
+                        </button>
                       </form>
                     </div>
 
@@ -129,7 +139,7 @@
                               </div>
                             </div>
                             <div class="modal-footer border-0">
-                              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                              <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
                               <button type="submit" class="btn-dark-pill btn-sm-pill">Guardar Cambios</button>
                             </div>
                           </form>

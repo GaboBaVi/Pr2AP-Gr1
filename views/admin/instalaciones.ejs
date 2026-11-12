@@ -72,12 +72,12 @@
                     <form action="/admin/instalaciones/bloquear" method="POST" onsubmit="return confirm('¿Confirmar restablecimiento de <%= inst.nombre %> para habilitarla nuevamente?');">
                       <input type="hidden" name="id" value="<%= inst.id %>">
                       <input type="hidden" name="fecha" value="<%= fecha %>">
-                      <button type="submit" class="btn btn-sm btn-success py-1 px-2 w-100" style="font-size: 0.75rem; border-radius: 6px;">
+                      <button type="submit" class="btn btn-sm btn-modern-success py-1 px-2 w-100 justify-content-center">
                         <i class="bi bi-unlock me-1"></i> Desbloquear
                       </button>
                     </form>
                   <% } else { %>
-                    <button type="button" class="btn btn-sm btn-outline-dark py-1 px-2 w-100" style="font-size: 0.75rem; border-radius: 6px;" data-bs-toggle="modal" data-bs-target="#modalBloqueo<%= inst.id %>">
+                    <button type="button" class="btn btn-sm btn-modern-neutral py-1 px-2 w-100 justify-content-center" data-bs-toggle="modal" data-bs-target="#modalBloqueo<%= inst.id %>">
                       <i class="bi bi-tools me-1"></i> Bloquear Mantenimiento
                     </button>
                   <% } %>
@@ -145,7 +145,7 @@
           </div>
           <div class="modal-footer border-0">
             <button type="button" class="btn btn-secondary btn-cancel-modal" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-danger" style="border-radius: 8px;">Confirmar Bloqueo</button>
+            <button type="submit" class="btn btn-modern-danger px-3 py-2 fw-semibold">Confirmar Bloqueo</button>
           </div>
         </form>
       </div>

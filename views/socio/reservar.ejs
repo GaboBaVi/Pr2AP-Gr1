@@ -5,7 +5,7 @@
     <div class="custom-card p-4 p-md-5">
       <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h3 class="fw-bold mb-0">Formulario de Reservas e Invitados</h3>
-        <a href="/socio/reservas" class="btn btn-sm btn-outline-secondary rounded-pill">Volver</a>
+        <a href="/socio/reservas" class="btn-volver"><i class="bi bi-arrow-left"></i> Volver</a>
       </div>
 
       <% if (error) { %>
@@ -194,7 +194,7 @@
               </div>
 
               <!-- BOTÓN PARA AGREGAR OTRO INVITADO -->
-              <button type="button" class="btn btn-sm btn-outline-dark w-100 mt-1" onclick="agregarFilaInvitado()" style="border-radius: 8px;">
+              <button type="button" class="btn-modern-neutral w-100 mt-1 justify-content-center" onclick="agregarFilaInvitado()">
                 <i class="bi bi-person-plus me-1"></i> Agregar otro invitado
               </button>
 

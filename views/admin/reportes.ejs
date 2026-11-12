@@ -8,12 +8,15 @@
           <h4 class="fw-bold mb-1">Reporte de Demanda y Uso de Instalaciones</h4>
           <span class="text-muted small">Identificación de áreas con mayor y menor solicitud por periodo</span>
         </div>
-        <form action="/admin/reportes" method="GET" class="d-flex gap-2 align-items-center">
-          <input type="date" name="inicio" value="<%= inicio %>" class="form-control form-control-custom form-control-sm">
-          <span class="small text-muted">a</span>
-          <input type="date" name="fin" value="<%= fin %>" class="form-control form-control-custom form-control-sm">
-          <button type="submit" class="btn-dark-pill btn-sm-pill">Filtrar</button>
-        </form>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <form action="/admin/reportes" method="GET" class="d-flex gap-2 align-items-center mb-0">
+            <input type="date" name="inicio" value="<%= inicio %>" class="form-control form-control-custom form-control-sm">
+            <span class="small text-muted">a</span>
+            <input type="date" name="fin" value="<%= fin %>" class="form-control form-control-custom form-control-sm">
+            <button type="submit" class="btn-dark-pill btn-sm-pill">Filtrar</button>
+          </form>
+          <a href="/admin/socios" class="btn-volver"><i class="bi bi-arrow-left"></i> Volver</a>
+        </div>
       </div>
 
       <div class="row g-4 mb-4">

@@ -9,7 +9,7 @@
           <span class="text-muted small">Configuración de plantillas automáticas por correo electrónico</span>
         </div>
         <div class="d-flex gap-2 align-items-center">
-          <button type="button" class="btn btn-outline-dark d-inline-flex align-items-center" style="height: 38px; border-radius: 8px; padding: 0 1.2rem;" data-bs-toggle="modal" data-bs-target="#modalNuevaPlantilla">
+          <button type="button" class="btn-modern-neutral d-inline-flex align-items-center" style="height: 38px;" data-bs-toggle="modal" data-bs-target="#modalNuevaPlantilla">
             <i class="bi bi-plus-lg me-1"></i> Nueva Plantilla
           </button>
           <a href="/admin/bitacora-notificaciones" class="btn-dark-pill btn-sm-pill d-inline-flex align-items-center" style="height: 38px;">Bitácora de Envíos</a>
@@ -31,7 +31,7 @@
       <% } %>
 
       <!-- CARRUSEL / TABS DE PLANTILLAS -->
-      <ul class="nav nav-pills mb-4 nav-fill flex-wrap gap-1" id="templatesTab" role="tablist">
+      <ul class="nav segmented-tabs mb-4 flex-wrap w-100" id="templatesTab" role="tablist">
         <% plantillas.forEach((p, idx) => { %>
           <li class="nav-item" role="presentation">
             <button class="nav-link <%= idx === 0 ? 'active' : '' %>" 
@@ -55,8 +55,8 @@
                 <% if (!baseTemplates.includes(p.clave)) { %>
                   <form action="/admin/notificaciones/eliminar" method="POST" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar la plantilla personalizada \'<%= p.nombre %>\'?');">
                     <input type="hidden" name="clave" value="<%= p.clave %>">
-                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Eliminar plantilla">
-                      <i class="bi bi-trash me-1"></i>Eliminar Plantilla
+                    <button type="submit" class="btn btn-sm btn-modern-danger py-1 px-3" title="Eliminar plantilla">
+                      <i class="bi bi-trash me-1"></i> Eliminar Plantilla
                     </button>
                   </form>
                 <% } %>
