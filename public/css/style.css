@@ -27,10 +27,16 @@ body {
 }
 
 .brand-logo {
-  height: 65px;
+  height: 85px;
   width: auto;
   object-fit: contain;
   transition: transform 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .brand-logo {
+    height: 65px;
+  }
 }
 
 .brand-logo:hover {
